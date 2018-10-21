@@ -1,0 +1,197 @@
+---------------------------------------------
+PIC ASSEMBLER LISTING
+Line    Address Opcode  Instruction
+---------------------------------------------
+0001    0000            ;configuracion 
+0002    0000            ;status 
+0003    0000            	DATO 	EQU 0X21
+0004    0000                varA    EQU 0x41
+0005    0000                varB    EQU 0x42
+0006    0000                varC    EQU 0x43
+0007    0000                VARD    EQU 0x44
+0008    0000                cont    EQU 0x45 
+0009    0000                ADC     EQU 0x46
+0010    0000                CON     EQU 0X47
+0011    0000                CON2    EQU 0X48
+0012    0000                CON3    EQU 0X49
+0013    0000                p1	    EQU 0X50
+0014    0000            INICIO
+0015    0000            	ORG 0x00 ;se elige en que posicion de memoria empezaremos 
+0016    0000    2801    	GOTO START
+0017    0001            ;CODE
+0018    0001            START
+0019    0001    1283    	bcf STATUS,RP0 ;Ir banco 0
+0020    0002    1303    	bcf STATUS,RP1
+0021    0003    3041    	movlw b'01000001' ;A/D conversion Fosc/8
+0022    0004    009F    	movwf ADCON0
+0023    0005            	;     	     7     6     5    4    3    2       1 0
+0024    0005            	; 1Fh ADCON0 ADCS1 ADCS0 CHS2 CHS1 CHS0 GO/DONE � ADON
+0025    0005    1683    	bsf STATUS,RP0 ;Ir banco 1
+0026    0006    1303    	bcf STATUS,RP1
+0027    0007    3007    	movlw b'00000111'
+0028    0008    0081    	movwf OPTION_REG ;TMR0 preescaler, 1:156
+0029    0009            	;                7    6      5    4    3   2   1   0 
+0030    0009            	; 81h OPTION_REG RBPU INTEDG T0CS T0SE PSA PS2 PS1 PS0
+0031    0009    300E    	movlw b'00001110' ;A/D Port AN0/RA0
+0032    000A    009F    	movwf ADCON1
+0033    000B            	;            7    6     5 4 3     2     1     0 
+0034    000B            	; 9Fh ADCON1 ADFM ADCS2 � � PCFG3 PCFG2 PCFG1 PCFG0
+0035    000B    1405    	bsf TRISA,0 ;RA0 linea de entrada para el ADC
+0036    000C    0186    	clrf TRISB
+0037    000D    1283    	bcf STATUS,RP0 ;Ir banco 0
+0038    000E    1303    	bcf STATUS,RP1
+0039    000F    0186    	clrf PORTB ;Limpiar PORTB
+0040    0010                ;---------------------------------------------------
+0041    0010    1683        BSF	STATUS,	5	; BIT SET FILE coloca el registro 5 del banco status en 1
+0042    0011    0186    	CLRF	TRISB
+0043    0012    3001    	MOVLW	B'00000001'	;Set 1 en los ultimos 4 bits de c
+0044    0013    0087    	MOVWF	TRISC
+0045    0014    1283    	BCF	STATUS,	5	;Limpiamos el B CON BCF. TRIS ES PARA DIRECCIONES
+0046    0015    3000    	MOVLW	0X00
+0047    0016    0086    	MOVWF	PORTB	;Movemos de L a W, y de W a F (puerto B)
+0048    0017    1283    	BCF	STATUS,	RP0	;Limpiamos el C CON BCF. TRIS ES PARA DIRECCIONES
+0049    0018    3001    	MOVLW	0X01
+0050    0019    0086    	MOVWF	PORTB	;Movemos de L a W, y de W a F
+0051    001A            	;ASIGNAR VALORES A LAS VARIABLES
+0052    001A    3004    	MOVLW	B'00000100'
+0053    001B    00C1    	MOVWF	varA
+0054    001C    3008    	MOVLW	B'00001000'
+0055    001D    00C2    	MOVWF	varB
+0056    001E    3005    	MOVLW	B'00000101'
+0057    001F    00C3    	MOVWF	varC
+0058    0020    3000    	MOVLW	B'00000000'
+0059    0021    00C4    	MOVWF	VARD
+0060    0022    3000    	MOVLW	B'00000000'
+0061    0023    00C5    	MOVWF	cont
+0062    0024            
+0063    0024            MENU ;Verificar si presion� el bot�n, a�adir uno al contador.
+0064    0024    1807    	BTFSC	PORTC,0	
+0065    0025    2027    	CALL	Incrementar
+0066    0026            	;Segun el valor de contador, asignar el valor de VARD e DECODIFICADOR
+0067    0026    282E    	GOTO	SwitchCont
+0068    0027            Incrementar:
+0069    0027    0AC5    	INCF	cont,1
+0070    0028    1945    	BTFSC	cont,2
+0071    0029    202B    	CALL	ResetCont
+0072    002A    0008    	RETURN
+0073    002B            ResetCont:
+0074    002B    3000    	MOVLW	B'00000000'
+0075    002C    00C5    	MOVWF	cont
+0076    002D    0008    	RETURN
+0077    002E            SwitchCont:
+0078    002E    1845    	BTFSC	cont,0
+0079    002F    2834    	GOTO	CI	;Caso Impar
+0080    0030    2831    	GOTO	CP	;Caso Par
+0081    0031            CP:
+0082    0031    18C5    	BTFSC	cont,1
+0083    0032    283D    	GOTO	case2	;10
+0084    0033    2837    	GOTO	case0	;00
+0085    0034            CI:
+0086    0034    18C5    	BTFSC	cont,1
+0087    0035    2840    	GOTO	case3	;11
+0088    0036    283A    	GOTO	case1	;01
+0089    0037            case0:
+0090    0037    0841    	MOVFW	varA
+0091    0038    00C4    	MOVWF	VARD
+0092    0039    2843    	GOTO	DECODIFICADOR
+0093    003A            case1:
+0094    003A    0842    	MOVFW	varB
+0095    003B    00C4    	MOVWF	VARD
+0096    003C    2843    	GOTO	DECODIFICADOR
+0097    003D            case2:
+0098    003D    0843    	MOVFW	varC
+0099    003E    00C4    	MOVWF	VARD
+0100    003F    2843    	GOTO	DECODIFICADOR
+0101    0040            case3:
+0102    0040    3002    	MOVLW	B'00000010'
+0103    0041    00C4    	MOVWF	VARD
+0104    0042    2843    	GOTO	DECODIFICADOR
+0105    0043            ;---------------------------------------------------------------------
+0106    0043            					;DISPLAY ON PORT B WHATS IN VARD
+0107    0043            DECODIFICADOR:
+0108    0043    1BC4        BTFSC   VARD, 7
+0109    0044    287C        GOTO    OCHOYNUEVE
+0110    0045    1B44    	BTFSC	VARD, 6
+0111    0046    2864    	GOTO	CUATROASIETE
+0112    0047    284C    	GOTO	CEROATRES
+0113    0048    2824    	GOTO	MENU
+0114    0049            MV:	
+0115    0049    0821    	MOVF	DATO, W  
+0116    004A    0086    	MOVWF	PORTB	
+0117    004B    0008    	RETURN
+0118    004C            
+0119    004C            CEROATRES:
+0120    004C    1AC4    	BTFSC	VARD, 5
+0121    004D    285A    	GOTO	DOSYTRES
+0122    004E    2850    	GOTO	CEROYUNO
+0123    004F    2843    	GOTO	DECODIFICADOR
+0124    0050            CEROYUNO:
+0125    0050    1A44    	BTFSC	VARD, 	4
+0126    0051    2856    	GOTO	UNO
+0127    0052    305F    	MOVLW	B'01011111'
+0128    0053    00A1    	MOVWF	DATO
+0129    0054    2049    	CALL	MV
+0130    0055    2843    	GOTO	DECODIFICADOR
+0131    0056            UNO:
+0132    0056    3006    	MOVLW	B'00000110'
+0133    0057    00A1    	MOVWF	DATO
+0134    0058    2049    	CALL	MV
+0135    0059    2843    	GOTO	DECODIFICADOR
+0136    005A            DOSYTRES:
+0137    005A    1A44    	BTFSC	VARD, 	4
+0138    005B    2860    	GOTO	TRES
+0139    005C    303B    	MOVLW	B'00111011'
+0140    005D    00A1    	MOVWF	DATO
+0141    005E    2049    	CALL	MV
+0142    005F    2843    	GOTO	DECODIFICADOR
+0143    0060            TRES:	
+0144    0060    302F    	MOVLW	B'00101111'
+0145    0061    00A1    	MOVWF	DATO
+0146    0062    2049    	CALL	MV
+0147    0063    2843    	GOTO    DECODIFICADOR
+0148    0064            
+0149    0064            CUATROASIETE:	
+0150    0064    1AC4    	BTFSC	VARD, 5
+0151    0065    2872    	GOTO	SEISYSIETE
+0152    0066    2868    	GOTO	CINCOYCUATRO
+0153    0067    2843    	GOTO	DECODIFICADOR
+0154    0068            CINCOYCUATRO:
+0155    0068    1A44    	BTFSC	VARD, 4
+0156    0069    286E    	GOTO	CINCO
+0157    006A    3066            MOVLW	B'01100110';SEIS
+0158    006B    00A1    	MOVWF	DATO
+0159    006C    2049    	CALL	MV
+0160    006D    2843    	GOTO	DECODIFICADOR
+0161    006E            CINCO:
+0162    006E    306D            MOVLW	B'01101101'
+0163    006F    00A1    	MOVWF	DATO
+0164    0070    2049    	CALL	MV
+0165    0071    2843    	GOTO	DECODIFICADOR
+0166    0072            	
+0167    0072            SEISYSIETE:	
+0168    0072    1A44    	BTFSC	VARD, 4
+0169    0073    2878    	GOTO	SIETE
+0170    0074    307D            MOVLW	B'01111101';SEIS
+0171    0075    00A1    	MOVWF	DATO
+0172    0076    2049    	CALL	MV
+0173    0077    2843    	GOTO	DECODIFICADOR
+0174    0078            SIETE:
+0175    0078    3007            MOVLW	B'00000111'
+0176    0079    00A1    	MOVWF	DATO
+0177    007A    2049    	CALL	MV
+0178    007B    2843    	GOTO	DECODIFICADOR
+0179    007C            
+0180    007C            OCHOYNUEVE:
+0181    007C    1E44            BTFSS   VARD, 4
+0182    007D    2882            GOTO    OCHO
+0183    007E    306F            MOVLW	B'01101111';NUEVE
+0184    007F    00A1    	MOVWF	DATO
+0185    0080    2049    	CALL	MV
+0186    0081    2843    	GOTO	DECODIFICADOR
+0187    0082            OCHO:
+0188    0082    307F    	MOVLW	B'01111111'
+0189    0083    00A1    	MOVWF	DATO
+0190    0084    2049    	CALL	MV
+0191    0085    2843    	GOTO    DECODIFICADOR
+---------------------------------------------
+Number of errors = 0
