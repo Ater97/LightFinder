@@ -1,0 +1,435 @@
+
+DATO  	EQU 0x21
+COUNTY 	EQU 0x22
+COUNTX 	EQU 0x23
+LIMITY 	EQU 0x24
+LIMITX 	EQU 0x25
+P1	  	EQU 0x26
+P2    	EQU 0x27
+COUNTBETA EQU 0x28
+LIMITBETA EQU 0x29
+
+VARMAXX	EQU	0x30
+VARMAXY	EQU	0x31
+VARPHOTOCELL EQU 0x32
+TMPCELL EQU 0x33
+TMPY    EQU 0x34
+TMPX    EQU 0x35
+TMPBETA EQU 0x36
+VARMAXBETA  EQU 0x37
+LIMITMAXX   EQU 0x38
+LIMITMAXY   EQU 0x39
+LIMITMAXBETA EQU 0x40
+
+VAR1    EQU 0x41
+VAR2    EQU 0x42
+VAR3    EQU 0x43
+VAR4    EQU 0x44
+cont    EQU 0x45 
+ADC     EQU 0x46
+CON     EQU 0x47
+CON2    EQU 0x48
+CON3    EQU 0x49
+
+INICIO
+
+	ORG		0x00
+	GOTO	START
+
+START
+	;1 = in        0  = out
+	;BIT SET FILE
+	BSF 	STATUS, 5; COLOCAMOS EN S EL BIT 5 DE REG. ESTATUS
+	CLRF	TRISB
+	CLRF	TRISD   
+	                    ;BIT CLEARE FILE
+	BCF		STATUS, RP0 ;TODOS LOS PINES DE B SON SALIDAS
+
+	MOVLW	0x00
+	MOVWF 	PORTB  ; SET 0 TO ALL PORTS B
+	MOVLW	0x00
+	MOVWF 	PORTD  ; SET 0 TO ALL PORTS B
+	MOVLW 	0xE6        ;NUMBER OF MOVES/STOPS IN Y, E6h = 230d
+	MOVWF 	LIMITY 
+	MOVLW 	0x20        ;NUMBER OF MOVES IN X
+	MOVWF 	LIMITX 
+	MOVLW	0x10	    ;NUMBER OF STOPS IN X, 10h = 16d
+	MOVWF	LIMITBETA
+	call 	CLEANY      ;SET COUNTERS TO 0
+	call 	CLEANX
+	call 	CLEANBETA
+
+                ;CONFIGURATION FOR THE PHOTOCELL 
+ 	bcf STATUS,RP0 ;Ir banco 0
+	bcf STATUS,RP1
+	movlw b'01000001' ;A/D conversion Fosc/8
+	movwf ADCON0
+	;     	     7     6     5    4    3    2       1 0
+	; 1Fh ADCON0 ADCS1 ADCS0 CHS2 CHS1 CHS0 GO/DONE � ADON
+	bsf STATUS,RP0 ;Ir banco 1
+	bcf STATUS,RP1
+	movlw b'00000111'
+	movwf OPTION_REG ;TMR0 preescaler, 1:156
+	;                7    6      5    4    3   2   1   0 
+	; 81h OPTION_REG RBPU INTEDG T0CS T0SE PSA PS2 PS1 PS0
+	movlw b'00001110' ;A/D Port AN0/RA0
+	movwf ADCON1
+	;            7    6     5 4 3     2     1     0 
+	; 9Fh ADCON1 ADFM ADCS2 � � PCFG3 PCFG2 PCFG1 PCFG0
+	bsf TRISA,0 ;RA0 linea de entrada para el ADC
+	;clrf TRISB
+	bcf STATUS,RP0 ;Ir banco 0
+	bcf STATUS,RP1
+	clrf PORTB ;Limpiar PORTB   
+;--------------------------------------------------------------------
+;--------------------------------------------------------------------
+						;MAIN
+MAIN:
+    call    SEARCH      ;SEARCH BEST POINT
+    call    MOVEGREATER ;GO TO BEST POINT
+  
+WHAIT:   
+    ;DO STUFF
+    ;BTFSS	BUTTON
+    GOTO    WHAIT
+
+    call    RESTART      ;RETURN TO ORIGINAL POSITION & CLEAN EVERYTHING
+    GOTO    MAIN
+    GOTO    END
+SEARCH:
+
+	call	LOOPX ; MOVE X AND Y
+	INCF	COUNTBETA,1
+	MOVF	LIMITBETA, W	
+	SUBWF	COUNTBETA, w
+	BTFSS	STATUS,Z
+	GOTO	SEARCH
+	call	CLEANBETA   ;CLEAN COUNTBETA
+	call 	LOOPBETAREVERSE    ;RETURN TO ORIGINAL POSITION
+    RETURN
+
+;------------------------------------------------------------------
+                        ;MOVE TO GREATER
+MOVEGREATER:
+
+	call	LOOPXMAX ; MOVE X 
+	INCF	COUNTBETA,1
+	MOVF	LIMITMAXBETA, W	
+	SUBWF	COUNTBETA, w
+	BTFSS	STATUS,Z
+	GOTO	MOVEGREATER
+    call	LOOPYMAX ; MOVE Y
+    call	CLEANBETA
+    RETURN
+
+RESTART:
+    call    LOOPMAXBETAREVERSE
+    call 	LOOPYREVERSEMAX
+    RETURN
+
+LOOPMAXBETAREVERSE:
+	call 	LOOPXREVERSEMAX
+	
+	INCF	COUNTBETA,1
+	MOVF	LIMITMAXBETA, W	
+	SUBWF	COUNTBETA, w
+	BTFSS	STATUS,Z
+	GOTO	LOOPMAXBETAREVERSE
+    RETURN
+
+LOOPXMAX:
+	call 	EJEX
+
+	;MOVE ON X
+    INCF    COUNTX,1    
+	MOVF  	LIMITMAXX, w
+	SUBWF 	COUNTX,w
+	BTFSS 	STATUS,Z ;CHECK COUNT < limitx
+	GOTO 	LOOPXMAX	; JUMP IF COUNT !=  limitx
+	
+	call 	CLEANX
+	RETURN
+
+LOOPYMAX:
+	call 	EJEY
+	;MOVE ON Y
+    INCF    COUNTY,1 ;count++
+	MOVF  	LIMITMAXY, w
+	SUBWF 	COUNTY,w
+	BTFSS 	STATUS,Z ;CHECK COUNT < limity
+	GOTO 	LOOPYMAX	; JUMP IF COUNT !=  limity
+	;RESET  countY
+	call 	CLEANY
+	return
+
+
+LOOPYREVERSEMAX:
+	call 	REVERSEEJEY
+    INCF    COUNTY,1
+	MOVF  	LIMITMAXY, w
+	SUBWF 	COUNTY,w
+	BTFSS 	STATUS,Z ;CHECK COUNT <32
+	GOTO 	LOOPYREVERSEMAX
+	call 	CLEANY
+	RETURN
+
+LOOPXREVERSEMAX:
+	call 	REVERSEEJEX
+    INCF    COUNTX,1
+	
+	MOVF  	LIMITMAXX, w
+	SUBWF 	COUNTX,w
+	BTFSS 	STATUS,Z ;CHECK COUNT <32
+	GOTO 	LOOPXREVERSEMAX
+	call 	CLEANX
+	RETURN
+
+;-------------------------------------------------------------------
+;                   Photocell comparation
+COMPARE:
+    ;TMPCELL = READ PHOTOCELL INF.
+    ;ASIGNAR A TMPCELL EL NUMERO EN LA ESCALA DE LUZ (0-9)
+
+    MOVF    VARPHOTOCELL,W
+    SUBWF   TMPCELL, W ; W = VARPHOTOVELL - TMPCELL 
+    BTFSC   STATUS, C   ;IF VARPHOTOCELL < TMPCELL ; c=0 if negative
+    call    CHANGEPHOTOCELL    
+    return
+
+CHANGEPHOTOCELL:
+    MOVLW   TMPCELL
+    MOVWF    VARPHOTOCELL  ;PHOTOCELL =  TMPCELL
+    MOVLW   TMPY
+    MOVWF   VARMAXY     ;VARMAXY = TMPY
+    MOVLW   TMPX
+    MOVWF   VARMAXX     ;VARMAXX = TMPX
+    MOVLW   TMPBETA
+    MOVWF   VARMAXBETA  ;VARMAXBETA = TMPBETA
+    return 
+
+;---------------------------------------------------------------------
+;                       LOOPS
+LOOPBETAREVERSE:
+	call 	LOOPXREVERSE
+	
+	INCF	COUNTBETA,1
+	MOVF	LIMITBETA, W	
+	SUBWF	COUNTBETA, w
+	BTFSS	STATUS,Z
+	GOTO	LOOPBETAREVERSE
+	RETURN
+
+LOOPX: ; LOOP i <= LIMITX
+	call 	EJEX
+
+	;MOVE ON X
+    INCF    COUNTX,1
+	MOVF  	LIMITX, w
+	SUBWF 	COUNTX,w
+	BTFSS 	STATUS,Z ;CHECK COUNT < limitx
+	GOTO 	LOOPX	; JUMP IF COUNT !=  limitx
+	call	LOOPY ; MOVE Y
+
+	call 	CLEANX
+	RETURN
+
+LOOPY: ;LOOP i <= LIMITY
+	call 	EJEY
+	;INSERT LOGIC COMPARE VALUE OF PHOTOCELL & SAVE IT
+    ;maybe add a delay here \o/
+    call    COMPARE
+
+	;MOVE ON Y
+    INCF    COUNTY,1
+	MOVF  	LIMITY, w
+	SUBWF 	COUNTY,w
+	BTFSS 	STATUS,Z ;CHECK COUNT < limity
+	GOTO 	LOOPY	; JUMP IF COUNT !=  limity
+	;RESET Y
+	call 	CLEANY
+	call 	LOOPYREVERSE
+	return
+
+LOOPYREVERSE:
+	call 	REVERSEEJEY
+    INCF    COUNTY,1
+	MOVF  	LIMITY, w
+	SUBWF 	COUNTY,w
+	BTFSS 	STATUS,Z ;CHECK COUNT <32
+	GOTO 	LOOPYREVERSE
+	call 	CLEANY
+	RETURN
+
+LOOPXREVERSE:
+	call 	REVERSEEJEX
+    INCF    COUNTX,1
+	MOVF  	LIMITX, w
+	SUBWF 	COUNTX,w
+	BTFSS 	STATUS,Z ;CHECK COUNT <32
+	GOTO 	LOOPXREVERSE
+	call 	CLEANX
+	RETURN
+;-------------------------------------------------------------------
+;						DELAYS
+Delay ; = 0.0001 seconds
+			;496 cycles
+	movlw	0xA5
+	movwf	p1
+Delay_0
+	decfsz	p1, f
+	goto	Delay_0
+
+			;4 cycles (including call)
+	return
+;-------------------------------------------------------------------
+;						UTILITIES
+MV:	
+	call 	DELAY
+	MOVF	DATO, W  
+	MOVWF	PORTD	
+	RETURN
+CLEANY:
+	MOVLW 	0x00  ;se asigna la literal a w (0x00)
+	MOVWF 	COUNTY ;muevo w a COUNT 
+	RETURN
+CLEANX:
+	MOVLW 	0x00  ;se asigna la literal a w (0x00)
+	MOVWF 	COUNTX ;muevo w a COUNT 
+	RETURN
+CLEANBETA:
+	MOVLW 	0x00  ;se asigna la literal a w (0x00)
+	MOVWF 	COUNTBETA ;muevo w a COUNT 
+	RETURN
+EJEX:	
+	call	MV12
+	call	MV06
+	call	MV03
+	call	MV09
+	RETURN
+EJEY:	
+	call	MVY12
+	call	MVY6
+	call	MVY3
+	call	MVY9
+	RETURN
+REVERSEEJEY:
+	call	MVY9
+	call	MVY3
+	call	MVY6
+	call	MVY12
+	RETURN
+REVERSEEJEX:
+	call  	MV09
+	call	MV03
+	call	MV06
+	call	MV12
+	RETURN
+
+MV01:	
+	MOVLW	B'00000001'
+	MOVWF	DATO
+	call	MV
+	RETURN
+
+MV02:
+	MOVLW	B'00000010'
+	MOVWF	DATO
+	call	MV
+	RETURN
+MV03:	
+	MOVLW	B'00000011'
+	MOVWF	DATO
+	call	MV
+	RETURN
+
+MV04:
+	MOVLW	B'00000100'
+	MOVWF	DATO
+	call	MV
+	RETURN
+MV05:
+	MOVLW	B'00000101'
+	MOVWF	DATO
+	call	MV
+	RETURN
+MV06:
+	MOVLW	B'00000110'
+	MOVWF	DATO
+	call	MV
+	RETURN
+MV07:
+	MOVLW	B'00000111'
+	MOVWF	DATO
+	call	MV
+	RETURN
+MV08:
+	MOVLW	B'00001000'
+	MOVWF	DATO
+	call	MV
+	RETURN
+MV09:
+	MOVLW	B'00001001'
+	MOVWF	DATO
+	call	MV
+	RETURN
+MV12:
+	MOVLW	B'00001100'
+	MOVWF	DATO
+	call	MV
+	RETURN
+MVy0:
+	MOVLW	B'00000000'
+	MOVWF	DATO
+	call	MV
+	RETURN
+MVY1:
+	MOVLW	B'00010000'
+	MOVWF	DATO
+	call	MV
+	RETURN
+MVY2:
+	MOVLW	B'00100000'
+	MOVWF	DATO
+	call	MV
+	RETURN
+MVY3:
+	MOVLW	B'00110000'
+	MOVWF	DATO
+	call	MV
+	RETURN
+MVY4:
+	MOVLW	B'01000000'
+	MOVWF	DATO
+	call	MV
+	RETURN
+MVY5:
+	MOVLW	B'01010000'
+	MOVWF	DATO
+	call	MV
+	RETURN
+MVY6:
+	MOVLW	B'01100000'
+	MOVWF	DATO
+	call	MV
+	RETURN
+MVY7:
+	MOVLW	B'01110000'
+	MOVWF	DATO
+	call	MV
+	RETURN
+MVY8:
+	MOVLW	B'10000000'
+	MOVWF	DATO
+	call	MV
+	RETURN
+MVY9:
+	MOVLW	B'10010000'
+	MOVWF	DATO
+	call	MV
+	RETURN
+MVY12:
+	MOVLW	B'11000000'
+	MOVWF	DATO
+	call	MV
+	RETURN
+END
