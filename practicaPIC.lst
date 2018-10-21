@@ -1,0 +1,114 @@
+---------------------------------------------
+PIC ASSEMBLER LISTING
+Line    Address Opcode  Instruction
+---------------------------------------------
+0001    0000            
+0002    0000            DATO EQU 0X21
+0003    0000            
+0004    0000            INICIO 
+0005    0000                    ORG     0X00
+0006    0000    2801            GOTO    START
+0007    0001            START   
+0008    0001    1683            BSF     STATUS, 5
+0009    0002    0186            CLRF    TRISB
+0010    0003            
+0011    0003    1788            BSF     TRISD, 7
+0012    0004    1708            BSF     TRISD, 6
+0013    0005    1688            BSF     TRISD, 5
+0014    0006    1608            BSF     TRISD, 4
+0015    0007    1508            BSF     TRISD, 2
+0016    0008    1588            BSF     TRISD, 3
+0017    0009            
+0018    0009    1283    	BCF	STATUS, RP0 
+0019    000A    3000            MOVLW   0X00
+0020    000B    0086            MOVWF   PORTB
+0021    000C            
+0022    000C            
+0023    000C            DECODIFICADOR
+0024    000C    1B88            BTFSC   PORTD, 7
+0025    000D    2845            GOTO    OCHOYNUEVE
+0026    000E    1B08    	BTFSC	PORTD, 6
+0027    000F    282D    	GOTO	CUATROASIETE
+0028    0010    2812    	GOTO	CEROATRES
+0029    0011    280C    	GOTO	DECODIFICADOR
+0030    0012            
+0031    0012            CEROATRES
+0032    0012    1A88    	BTFSC	PORTD, 5
+0033    0013    2820    	GOTO	DOSYTRES
+0034    0014    2816    	GOTO	CEROYUNO
+0035    0015    280C    	GOTO	DECODIFICADOR
+0036    0016            CEROYUNO
+0037    0016    1A08    	BTFSC	PORTD, 	4
+0038    0017    281C    	GOTO	UNO
+0039    0018    303F    	MOVLW	B'00111111'
+0040    0019    00A1    	MOVWF	DATO
+0041    001A    202A    	CALL	MV
+0042    001B    280C    	GOTO	DECODIFICADOR
+0043    001C            
+0044    001C            UNO
+0045    001C    3006    	MOVLW	B'00000110'
+0046    001D    00A1    	MOVWF	DATO
+0047    001E    202A    	CALL	MV
+0048    001F    280C    	GOTO	DECODIFICADOR
+0049    0020            DOSYTRES
+0050    0020    1A08    	BTFSC	PORTD, 	4
+0051    0021    2826    	GOTO	TRES
+0052    0022    305B    	MOVLW	B'01011011'
+0053    0023    00A1    	MOVWF	DATO
+0054    0024    202A    	CALL	MV
+0055    0025    280C    	GOTO	DECODIFICADOR
+0056    0026            TRES	
+0057    0026    304F    	MOVLW	B'01001111'
+0058    0027    00A1    	MOVWF	DATO
+0059    0028    202A    	CALL	MV
+0060    0029    280C    	GOTO    DECODIFICADOR
+0061    002A            MV	
+0062    002A    0821    	MOVF	DATO, W  ; A DONDE, DESDE DONDE
+0063    002B    0086    	MOVWF	PORTB	
+0064    002C    0008    	RETURN
+0065    002D            
+0066    002D            CUATROASIETE	
+0067    002D    1A88    	BTFSC	PORTD, 5
+0068    002E    283B    	GOTO	SEISYSIETE
+0069    002F    2831    	GOTO	CINCOYCUATRO
+0070    0030    280C    	GOTO	DECODIFICADOR
+0071    0031            CINCOYCUATRO
+0072    0031    1A08    	BTFSC	PORTD, 4
+0073    0032    2837    	GOTO	CINCO
+0074    0033    3066            MOVLW	B'01100110';SEIS
+0075    0034    00A1    	MOVWF	DATO
+0076    0035    202A    	CALL	MV
+0077    0036    280C    	GOTO	DECODIFICADOR
+0078    0037            CINCO
+0079    0037    306D            MOVLW	B'01101101'
+0080    0038    00A1    	MOVWF	DATO
+0081    0039    202A    	CALL	MV
+0082    003A    280C    	GOTO	DECODIFICADOR
+0083    003B            	
+0084    003B            SEISYSIETE	
+0085    003B    1A08    	BTFSC	PORTD, 4
+0086    003C    2841    	GOTO	SIETE
+0087    003D    307D            MOVLW	B'01111101';SEIS
+0088    003E    00A1    	MOVWF	DATO
+0089    003F    202A    	CALL	MV
+0090    0040    280C    	GOTO	DECODIFICADOR
+0091    0041            SIETE
+0092    0041    3007            MOVLW	B'00000111'
+0093    0042    00A1    	MOVWF	DATO
+0094    0043    202A    	CALL	MV
+0095    0044    280C    	GOTO	DECODIFICADOR
+0096    0045            
+0097    0045            OCHOYNUEVE
+0098    0045    1E08            BTFSS   PORTD, 4
+0099    0046    284B            GOTO    OCHO
+0100    0047    306F            MOVLW	B'01101111';NUEVE
+0101    0048    00A1    	MOVWF	DATO
+0102    0049    202A    	CALL	MV
+0103    004A    280C    	GOTO	DECODIFICADOR
+0104    004B            OCHO
+0105    004B    307F    	MOVLW	B'01111111'
+0106    004C    00A1    	MOVWF	DATO
+0107    004D    202A    	CALL	MV
+0108    004E    280C    	GOTO    DECODIFICADOR
+---------------------------------------------
+Number of errors = 0
