@@ -1,0 +1,307 @@
+---------------------------------------------
+PIC ASSEMBLER LISTING
+Line    Address Opcode  Instruction
+---------------------------------------------
+0001    0000            
+0002    0000            DATO  	EQU 0X21
+0003    0000            COUNTY 	EQU 0X22
+0004    0000            COUNTX 	EQU 0X23
+0005    0000            LIMITY 	EQU 0X24
+0006    0000            LIMITX 	EQU 0X25
+0007    0000            P1	  	EQU 0X26
+0008    0000            P2    	EQU 0X27
+0009    0000            COUNTBETA EQU 0X28
+0010    0000            LIMITBETA EQU 0X29
+0011    0000            VARMAXX	EQU	0X30
+0012    0000            VARMAXY	EQU	0X31
+0013    0000            
+0014    0000            INICIO
+0015    0000            
+0016    0000            	ORG		0X00
+0017    0000    2801    	GOTO	START
+0018    0001            
+0019    0001            START
+0020    0001            	;1 = in        0  = out
+0021    0001            	;BIT SET FILE
+0022    0001    1683    	BSF 	STATUS, 5; COLOCAMOS EN S EL BIT 5 DE REG. ESTATUS
+0023    0002    0186    	CLRF	TRISB
+0024    0003    0188    	CLRF	TRISD   
+0025    0004            	                    ;BIT CLEARE FILE
+0026    0004    1283    	BCF		STATUS, RP0 ;TODOS LOS PINES DE B SON SALIDAS
+0027    0005            
+0028    0005    3000    	MOVLW	0X00
+0029    0006    0086    	MOVWF 	PORTB  ; SET 0 TO ALL PORTS B
+0030    0007    3000    	MOVLW	0X00
+0031    0008    0088    	MOVWF 	PORTD  ; SET 0 TO ALL PORTS B
+0032    0009    30CA    	MOVLW 	0xCA	
+0033    000A    00A4    	MOVWF 	LIMITY ;LIMIT 20H -> 32D 
+0034    000B    3020    	MOVLW 	0x20
+0035    000C    00A5    	MOVWF 	LIMITX ;LIMIT 40H -> 64D
+0036    000D    3010    	MOVLW	0x10	
+0037    000E    00A9    	MOVWF	LIMITBETA
+0038    000F    2055    	CALL 	CLEANY
+0039    0010    2058    	CALL 	CLEANX
+0040    0011    205B    	CALL 	CLEANBETA
+0041    0012            ;--------------------------------------------------------------------
+0042    0012            						;MAIN
+0043    0012            						
+0044    0012            SEARCH
+0045    0012            
+0046    0012    2022    	CALL	LOOPX ; MOVE X AND Y
+0047    0013    0AA8    	INCF	COUNTBETA,1
+0048    0014    0829    	MOVF	LIMITBETA, W	
+0049    0015    0228    	SUBWF	COUNTBETA, w
+0050    0016    1D03    	BTFSS	STATUS,Z
+0051    0017    2812    	GOTO	SEARCH
+0052    0018    205B    	CALL	CLEANBETA
+0053    0019    201B    	CALL 	LOOPBETA
+0054    001A    28C6    	GOTO 	END
+0055    001B            
+0056    001B            ;---------------------------------------------------------------------
+0057    001B            
+0058    001B            LOOPBETA
+0059    001B    204B    	CALL 	LOOPXREVERSE
+0060    001C            	
+0061    001C    0AA8    	INCF	COUNTBETA,1
+0062    001D    0829    	MOVF	LIMITBETA, W	
+0063    001E    0228    	SUBWF	COUNTBETA, w
+0064    001F    1D03    	BTFSS	STATUS,Z
+0065    0020    281B    	GOTO	LOOPBETA
+0066    0021    28C6    	GOTO 	END
+0067    0022            
+0068    0022            
+0069    0022            LOOPX ; LOOP i <= LIMITX
+0070    0022    205E    	CALL 	EJEX
+0071    0023            
+0072    0023            	;MOVE ON X
+0073    0023    0823    	MOVF  	COUNTX, w
+0074    0024    3E01    	ADDLW 	0x01 	; COUNT++
+0075    0025    00A3        MOVWF 	COUNTX 
+0076    0026    0825    	MOVF  	LIMITX, w
+0077    0027    0223    	SUBWF 	COUNTX,w
+0078    0028    1D03    	BTFSS 	STATUS,Z ;CHECK COUNT < limitx
+0079    0029    2822    	GOTO 	LOOPX	; JUMP IF COUNT !=  limitx
+0080    002A    202D    	CALL	LOOPY ; MOVE Y
+0081    002B            
+0082    002B    2058    	CALL 	CLEANX
+0083    002C    0008    	RETURN
+0084    002D            
+0085    002D            	
+0086    002D            
+0087    002D            LOOPY ;LOOP i <= LIMITY
+0088    002D    2063    	CALL 	EJEY
+0089    002E            	;INSERT LOGIC COMPARE VALUE OF PHOTOCELL & SAVE IT
+0090    002E            
+0091    002E            
+0092    002E            	;MOVE ON Y
+0093    002E    0822    	MOVF  	COUNTY, w
+0094    002F    3E01    	ADDLW 	0x01 	; COUNT++
+0095    0030    00A2        MOVWF 	COUNTY 
+0096    0031    0824    	MOVF  	LIMITY, w
+0097    0032    0222    	SUBWF 	COUNTY,w
+0098    0033    1D03    	BTFSS 	STATUS,Z ;CHECK COUNT < limity
+0099    0034    282D    	GOTO 	LOOPY	; JUMP IF COUNT !=  limity
+0100    0035            	;RESET Y
+0101    0035    2055    	CALL 	CLEANY
+0102    0036    2041    	CALL 	LOOPYREVERSE
+0103    0037    0008    	return
+0104    0038            
+0105    0038            
+0106    0038            ;-------------------------------------------------------------------
+0107    0038            ;						DELAY
+0108    0038            Delay ; = 0.0001 seconds
+0109    0038            			;496 cycles
+0110    0038    30A5    	movlw	0xA5
+0111    0039    00A6    	movwf	p1
+0112    003A            Delay_0
+0113    003A    0BA6    	decfsz	p1, f
+0114    003B    283A    	goto	Delay_0
+0115    003C            
+0116    003C            			;4 cycles (including call)
+0117    003C    0008    	return
+0118    003D            ;-------------------------------------------------------------------
+0119    003D            ;						UTILITIES
+0120    003D            
+0121    003D            
+0122    003D            MV	
+0123    003D    2038    	CALL 	DELAY
+0124    003E    0821    	MOVF	DATO, W  
+0125    003F    0088    	MOVWF	PORTD	
+0126    0040    0008    	RETURN
+0127    0041            
+0128    0041            LOOPYREVERSE
+0129    0041    2068    	CALL 	REVERSEEJEY
+0130    0042    0822    	MOVF  	COUNTY, w
+0131    0043    3E01    	ADDLW 	0x01 ; sume a w la literal (0x01)
+0132    0044    00A2        MOVWF 	COUNTY ; se mueve lo que tiene w a f 
+0133    0045    0824    	MOVF  	LIMITY, w
+0134    0046    0222    	SUBWF 	COUNTY,w
+0135    0047    1D03    	BTFSS 	STATUS,Z ;CHECK COUNT <32
+0136    0048    2841    	GOTO 	LOOPYREVERSE
+0137    0049    2055    	CALL 	CLEANY
+0138    004A    0008    	RETURN
+0139    004B            
+0140    004B            LOOPXREVERSE
+0141    004B    206D    	CALL 	REVERSEEJEX
+0142    004C    0823    	MOVF  	COUNTX, w
+0143    004D    3E01    	ADDLW 	0x01 ; sume a w la literal (0x01)
+0144    004E    00A3        MOVWF 	COUNTX ; se mueve lo que tiene w a f 
+0145    004F    0825    	MOVF  	LIMITX, w
+0146    0050    0223    	SUBWF 	COUNTX,w
+0147    0051    1D03    	BTFSS 	STATUS,Z ;CHECK COUNT <32
+0148    0052    284B    	GOTO 	LOOPXREVERSE
+0149    0053    2058    	CALL 	CLEANX
+0150    0054    0008    	RETURN
+0151    0055            
+0152    0055            CLEANY
+0153    0055    3000    	MOVLW 	0x00  ;se asigna la literal a w (0x00)
+0154    0056    00A2    	MOVWF 	COUNTY ;muevo w a COUNT 
+0155    0057    0008    	RETURN
+0156    0058            
+0157    0058            CLEANX
+0158    0058    3000    	MOVLW 	0x00  ;se asigna la literal a w (0x00)
+0159    0059    00A3    	MOVWF 	COUNTX ;muevo w a COUNT 
+0160    005A    0008    	RETURN
+0161    005B            CLEANBETA
+0162    005B    3000    	MOVLW 	0x00  ;se asigna la literal a w (0x00)
+0163    005C    00A8    	MOVWF 	COUNTBETA ;muevo w a COUNT 
+0164    005D    0008    	RETURN
+0165    005E            
+0166    005E            EJEX	
+0167    005E    2096    	CALL	MV12
+0168    005F    2086    	CALL	MV06
+0169    0060    207A    	CALL	MV03
+0170    0061    2092    	CALL	MV09
+0171    0062    0008    	RETURN
+0172    0063            
+0173    0063            EJEY	
+0174    0063    20C2    	CALL	MVY12
+0175    0064    20B2    	CALL	MVY6
+0176    0065    20A6    	CALL	MVY3
+0177    0066    20BE    	CALL	MVY9
+0178    0067    0008    	RETURN
+0179    0068            
+0180    0068            REVERSEEJEY
+0181    0068    20BE    	CALL	MVY9
+0182    0069    20A6    	CALL	MVY3
+0183    006A    20B2    	CALL	MVY6
+0184    006B    20C2    	CALL	MVY12
+0185    006C    0008    	RETURN
+0186    006D            REVERSEEJEX
+0187    006D    2092    	CALL  	MV09
+0188    006E    207A    	CALL	MV03
+0189    006F    2086    	CALL	MV06
+0190    0070    2096    	CALL	MV12
+0191    0071    0008    	RETURN
+0192    0072            
+0193    0072            MV01	
+0194    0072    3001    	MOVLW	B'00000001'
+0195    0073    00A1    	MOVWF	DATO
+0196    0074    203D    	CALL	MV
+0197    0075    0008    	RETURN
+0198    0076            
+0199    0076            MV02
+0200    0076    3002    	MOVLW	B'00000010'
+0201    0077    00A1    	MOVWF	DATO
+0202    0078    203D    	CALL	MV
+0203    0079    0008    	RETURN
+0204    007A            MV03	
+0205    007A    3003    	MOVLW	B'00000011'
+0206    007B    00A1    	MOVWF	DATO
+0207    007C    203D    	CALL	MV
+0208    007D    0008    	RETURN
+0209    007E            
+0210    007E            MV04
+0211    007E    3004    	MOVLW	B'00000100'
+0212    007F    00A1    	MOVWF	DATO
+0213    0080    203D    	CALL	MV
+0214    0081    0008    	RETURN
+0215    0082            MV05
+0216    0082    3005    	MOVLW	B'00000101'
+0217    0083    00A1    	MOVWF	DATO
+0218    0084    203D    	CALL	MV
+0219    0085    0008    	RETURN
+0220    0086            MV06
+0221    0086    3006    	MOVLW	B'00000110'
+0222    0087    00A1    	MOVWF	DATO
+0223    0088    203D    	CALL	MV
+0224    0089    0008    	RETURN
+0225    008A            MV07
+0226    008A    3007    	MOVLW	B'00000111'
+0227    008B    00A1    	MOVWF	DATO
+0228    008C    203D    	CALL	MV
+0229    008D    0008    	RETURN
+0230    008E            MV08
+0231    008E    3008    	MOVLW	B'00001000'
+0232    008F    00A1    	MOVWF	DATO
+0233    0090    203D    	CALL	MV
+0234    0091    0008    	RETURN
+0235    0092            MV09
+0236    0092    3009    	MOVLW	B'00001001'
+0237    0093    00A1    	MOVWF	DATO
+0238    0094    203D    	CALL	MV
+0239    0095    0008    	RETURN
+0240    0096            MV12
+0241    0096    300C    	MOVLW	B'00001100'
+0242    0097    00A1    	MOVWF	DATO
+0243    0098    203D    	CALL	MV
+0244    0099    0008    	RETURN
+0245    009A            MVy0
+0246    009A    3000    	MOVLW	B'00000000'
+0247    009B    00A1    	MOVWF	DATO
+0248    009C    203D    	CALL	MV
+0249    009D    0008    	RETURN
+0250    009E            MVY1
+0251    009E    3010    	MOVLW	B'00010000'
+0252    009F    00A1    	MOVWF	DATO
+0253    00A0    203D    	CALL	MV
+0254    00A1    0008    	RETURN
+0255    00A2            MVY2
+0256    00A2    3020    	MOVLW	B'00100000'
+0257    00A3    00A1    	MOVWF	DATO
+0258    00A4    203D    	CALL	MV
+0259    00A5    0008    	RETURN
+0260    00A6            MVY3
+0261    00A6    3030    	MOVLW	B'00110000'
+0262    00A7    00A1    	MOVWF	DATO
+0263    00A8    203D    	CALL	MV
+0264    00A9    0008    	RETURN
+0265    00AA            MVY4
+0266    00AA    3040    	MOVLW	B'01000000'
+0267    00AB    00A1    	MOVWF	DATO
+0268    00AC    203D    	CALL	MV
+0269    00AD    0008    	RETURN
+0270    00AE            MVY5
+0271    00AE    3050    	MOVLW	B'01010000'
+0272    00AF    00A1    	MOVWF	DATO
+0273    00B0    203D    	CALL	MV
+0274    00B1    0008    	RETURN
+0275    00B2            MVY6
+0276    00B2    3060    	MOVLW	B'01100000'
+0277    00B3    00A1    	MOVWF	DATO
+0278    00B4    203D    	CALL	MV
+0279    00B5    0008    	RETURN
+0280    00B6            MVY7
+0281    00B6    3070    	MOVLW	B'01110000'
+0282    00B7    00A1    	MOVWF	DATO
+0283    00B8    203D    	CALL	MV
+0284    00B9    0008    	RETURN
+0285    00BA            MVY8
+0286    00BA    3080    	MOVLW	B'10000000'
+0287    00BB    00A1    	MOVWF	DATO
+0288    00BC    203D    	CALL	MV
+0289    00BD    0008    	RETURN
+0290    00BE            MVY9
+0291    00BE    3090    	MOVLW	B'10010000'
+0292    00BF    00A1    	MOVWF	DATO
+0293    00C0    203D    	CALL	MV
+0294    00C1    0008    	RETURN
+0295    00C2            MVY12
+0296    00C2    30C0    	MOVLW	B'11000000'
+0297    00C3    00A1    	MOVWF	DATO
+0298    00C4    203D    	CALL	MV
+0299    00C5    0008    	RETURN
+0300    00C6            
+0301    00C6            END
+---------------------------------------------
+Number of errors = 0
