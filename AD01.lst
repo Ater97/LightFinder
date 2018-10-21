@@ -1,0 +1,105 @@
+---------------------------------------------
+PIC ASSEMBLER LISTING
+Line    Address Opcode  Instruction
+---------------------------------------------
+0001    0000            ADC EQU 0x20
+0002    0000            CON EQU 0X21
+0003    0000            CON2 EQU 0X22
+0004    0000            CON3 EQU 0X23
+0005    0000            p1	 EQU 0X24
+0006    0000            
+0007    0000            	org 0x00 ;Inicio del programa en la posici�n cero de memoria
+0008    0000    0000    	nop ;Libre (uso del debugger)
+0009    0001            
+0010    0001            _inicio
+0011    0001    1283    	bcf STATUS,RP0 ;Ir banco 0
+0012    0002    1303    	bcf STATUS,RP1
+0013    0003    3041    	movlw b'01000001' ;A/D conversion Fosc/8
+0014    0004    009F    	movwf ADCON0
+0015    0005            	;     	     7     6     5    4    3    2       1 0
+0016    0005            	; 1Fh ADCON0 ADCS1 ADCS0 CHS2 CHS1 CHS0 GO/DONE � ADON
+0017    0005    1683    	bsf STATUS,RP0 ;Ir banco 1
+0018    0006    1303    	bcf STATUS,RP1
+0019    0007    3007    	movlw b'00000111'
+0020    0008    0081    	movwf OPTION_REG ;TMR0 preescaler, 1:156
+0021    0009            	;                7    6      5    4    3   2   1   0 
+0022    0009            	; 81h OPTION_REG RBPU INTEDG T0CS T0SE PSA PS2 PS1 PS0
+0023    0009    300E    	movlw b'00001110' ;A/D Port AN0/RA0
+0024    000A    009F    	movwf ADCON1
+0025    000B            	;            7    6     5 4 3     2     1     0 
+0026    000B            	; 9Fh ADCON1 ADFM ADCS2 � � PCFG3 PCFG2 PCFG1 PCFG0
+0027    000B    1405    	bsf TRISA,0 ;RA0 linea de entrada para el ADC
+0028    000C    0186    	clrf TRISB
+0029    000D    1283    	bcf STATUS,RP0 ;Ir banco 0
+0030    000E    1303    	bcf STATUS,RP1
+0031    000F    0186    	clrf PORTB ;Limpiar PORTB
+0032    0010            _bucle
+0033    0010            	;btfss INTCON,T0IF
+0034    0010            	;goto _bucle ;Esperar que el timer0 desborde
+0035    0010            	; SE DEBE DE COLOCAR UN DELAY PARA QUE ESPERE LA CONVERSION
+0036    0010    1503    	BSF  STATUS,Z
+0037    0011    2037    	CALL Delay
+0038    0012    110B    	bcf INTCON,T0IF ;Limpiar el indicador de desborde
+0039    0013    151F    	bsf ADCON0,GO ;Comenzar conversion A/D
+0040    0014            _espera
+0041    0014    191F    	btfsc ADCON0,GO ;ADCON0 es 0? (la conversion esta completa?)
+0042    0015    2814    	goto _espera ;No, ir _espera
+0043    0016    081E    	movf ADRESH,W ;Si, W=ADRESH
+0044    0017            	; 1Eh ADRESH A/D Result Register High Byte
+0045    0017            	; 9Eh ADRESL A/D Result Register Low Byte 
+0046    0017    00A0    	movwf ADC ;ADC=W
+0047    0018    0CA0    	rrf ADC,F ;ADC /4
+0048    0019    0CA0    	rrf ADC,F
+0049    001A    13A0    	bcf ADC,7
+0050    001B    1320    	bcf ADC,6
+0051    001C    0820    	movfw ADC ;W = ADC
+0052    001D    0086    	movwf PORTB ;PORTB = W
+0053    001E    3020    	movlw D'32' ;Comparamos el valor del ADC para saber si es menor que 128
+0054    001F    0220    	subwf ADC,W
+0055    0020    1C03    	btfss STATUS,C ;Es mayor a 128?
+0056    0021    2824    	goto _desactivar ;No, desactivar RB7
+0057    0022    1787    	bsf PORTC,7 ;Si, RB7 = 1 logico
+0058    0023    2810    	goto _bucle ;Ir bucle
+0059    0024            _desactivar
+0060    0024    1386    	bcf PORTB,7 ;RB7 = 0 logico
+0061    0025    2810    	goto _bucle ;Ir bucle
+0062    0026            	
+0063    0026            _PRESPERA
+0064    0026    30FF    	MOVLW 0XFF
+0065    0027    00A1    	MOVWF CON
+0066    0028    00A2    	MOVWF CON2
+0067    0029    00A3    	MOVWF CON3	
+0068    002A    202C    	CALL ESPE
+0069    002B    0008    	RETURN	
+0070    002C            	
+0071    002C            ESPE
+0072    002C    0BA1    	DECFSZ	CON,0X01
+0073    002D    282C    	GOTO	ESPE
+0074    002E    2030    	CALL	ESPE2
+0075    002F    0008    	RETURN
+0076    0030            ESPE2
+0077    0030    0BA2    	DECFSZ	CON2,0X01
+0078    0031    2830    	GOTO	ESPE2
+0079    0032    2034    	CALL	ESPE3
+0080    0033    0008    	RETURN
+0081    0034            ESPE3
+0082    0034    0BA3    	DECFSZ	CON3,0X01
+0083    0035    2834    	GOTO	ESPE3
+0084    0036    0008    	RETURN	
+0085    0037            
+0086    0037            
+0087    0037            
+0088    0037            Delay ; = 0.0001 seconds
+0089    0037            			;496 cycles
+0090    0037    30A5    	movlw	0xA5
+0091    0038    00A4    	movwf	p1
+0092    0039            Delay_0
+0093    0039    0BA4    	decfsz	p1, f
+0094    003A    2839    	goto	Delay_0
+0095    003B            
+0096    003B            			;4 cycles (including call)
+0097    003B    0008    	return
+0098    003C            ;-------------------------------	
+0099    003C            end
+---------------------------------------------
+Number of errors = 0
