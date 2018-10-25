@@ -65,10 +65,10 @@ Line    Address Opcode  Instruction
 0061    0011    00B1    	MOVWF	LIMITMAXBETA
 0062    0012    3006    	MOVLW	0x06
 0063    0013    00BC    	MOVWF	GROUPNUMBER
-0064    0014    20D2    	call 	CLEANY      ;SET COUNTERS TO 0
-0065    0015    20D5    	call 	CLEANX
-0066    0016    20D8    	call 	CLEANBETA
-0067    0017    20DB    	call 	CLEANVARPHOTOCELL
+0064    0014    20DE    	call 	CLEANY      ;SET COUNTERS TO 0
+0065    0015    20E1    	call 	CLEANX
+0066    0016    20E4    	call 	CLEANBETA
+0067    0017    20E7    	call 	CLEANVARPHOTOCELL
 0068    0018            
 0069    0018            ;------------------------------------------------------------------------------
 0070    0018                            ;CONFIGURATION FOR THE PHOTOCELL 
@@ -104,11 +104,11 @@ Line    Address Opcode  Instruction
 0100    002D            ;--------------------------------------------------------------------
 0101    002D            						;MAIN
 0102    002D            MAIN:
-0103    002D    203B        call    SEARCH      ;SEARCH BEST POINT
-0104    002E    2046        call    MOVEGREATER ;GO TO BEST POINT
+0103    002D    203C        call    SEARCH      ;SEARCH BEST POINT
+0104    002E    2047        call    MOVEGREATER ;GO TO BEST POINT
 0105    002F    082A    	MOVFW	VARPHOTOCELL
 0106    0030    00B6    	MOVWF	VARDISPLAY
-0107    0031    21FF    	call	SHOWVARDISPLAY
+0107    0031    220B    	call	SHOWVARDISPLAY
 0108    0032            WAIT:   
 0109    0032                ;DO STUFF WITH THE BUTTON
 0110    0032            
@@ -116,825 +116,843 @@ Line    Address Opcode  Instruction
 0112    0033    2832        GOTO    WAIT
 0113    0034            ;--------------------------------------------------------------------
 0114    0034            						;BUTTON
-0115    0034            BUTTONLOOP:
+0115    0034            BUTTONShowGroupNumber:
 0116    0034    083C    	MOVFW	GROUPNUMBER
 0117    0035    00B6    	MOVWF	VARDISPLAY
-0118    0036    21FF    	CALL	SHOWVARDISPLAY
-0119    0037            	
-0120    0037    2834    	GOTO	BUTTONLOOP
-0121    0038            
-0122    0038            
-0123    0038    2051        call    RESTART      ;RETURN TO ORIGINAL POSITION & CLEAN EVERYTHING
-0124    0039    282D        GOTO    MAIN
-0125    003A    2A78        GOTO    END
-0126    003B            SEARCH:
-0127    003B    20A4    	call	LOOPX ; MOVE X AND Y
-0128    003C            
-0129    003C    0828    	MOVF 	COUNTBETA, W
-0130    003D    00AD    	MOVWF	TMPBETA
-0131    003E            
-0132    003E    0AA8    	INCF	COUNTBETA,1
-0133    003F    0829    	MOVF	LIMITBETA, W	
-0134    0040    0228    	SUBWF	COUNTBETA, w
-0135    0041    1D03    	BTFSS	STATUS,Z
-0136    0042    283B    	GOTO	SEARCH
-0137    0043    20D8    	call	CLEANBETA   ;CLEAN COUNTBETA
-0138    0044    209C    	call 	LOOPBETAREVERSE    ;RETURN TO ORIGINAL POSITION
-0139    0045    0008        RETURN
-0140    0046            
-0141    0046            ;------------------------------------------------------------------
-0142    0046                                    ;MOVE TO GREATER
-0143    0046            MOVEGREATER:
-0144    0046    2064    	call	LOOPYMAX ; MOVE Y
-0145    0047    2049    	call	LOOPXMAXBETA ; MOVE X 
-0146    0048            	;call 	LOOPXMAX
-0147    0048    0008    	return
-0148    0049            LOOPXMAXBETA:
-0149    0049    205C    	call 	LOOPXMAX
-0150    004A            
-0151    004A    0AA8    	INCF	COUNTBETA,1
-0152    004B    0831    	MOVF	LIMITMAXBETA, W	
-0153    004C    0228    	SUBWF	COUNTBETA, w
-0154    004D    1D03    	BTFSS	STATUS,Z
-0155    004E    2849    	GOTO	LOOPXMAXBETA
-0156    004F    20D8        call	CLEANBETA
-0157    0050    0008        RETURN
-0158    0051            
-0159    0051            RESTART:
-0160    0051    2055        call    LOOPMAXBETAREVERSE
-0161    0052    206C        call 	LOOPYREVERSEMAX
-0162    0053    20DB    	call 	CLEANVARPHOTOCELL
-0163    0054    0008        RETURN
-0164    0055            VAR
-0165    0055            LOOPMAXBETAREVERSE:
-0166    0055    2074    	call 	LOOPXREVERSEMAX
-0167    0056            	
-0168    0056    0AA8    	INCF	COUNTBETA,1
-0169    0057    0831    	MOVF	LIMITMAXBETA, W	
-0170    0058    0228    	SUBWF	COUNTBETA, w
-0171    0059    1D03    	BTFSS	STATUS,Z
-0172    005A    2855    	GOTO	LOOPMAXBETAREVERSE
-0173    005B    0008        RETURN
-0174    005C            
-0175    005C            LOOPXMAX:	
-0176    005C    20DE    	call 	EJEX
-0177    005D            	;MOVE ON X
-0178    005D    0AA3        INCF    COUNTX,1
-0179    005E    0825    	MOVF  	LIMITX, w
-0180    005F    0223    	SUBWF 	COUNTX,w
-0181    0060    1D03    	BTFSS 	STATUS,Z ;CHECK COUNT < limitx
-0182    0061    285C    	GOTO 	LOOPXMAX	; JUMP IF COUNT !=  limitx
-0183    0062    20D5    	call 	CLEANX
-0184    0063    0008    	RETURN
-0185    0064            
-0186    0064            LOOPYMAX:
-0187    0064    20E3    	call 	EJEY
-0188    0065            	;MOVE ON Y
-0189    0065    0AA2        INCF    COUNTY,1 ;count++
-0190    0066    0830    	MOVF  	LIMITMAXY, w
-0191    0067    0222    	SUBWF 	COUNTY,w
-0192    0068    1D03    	BTFSS 	STATUS,Z ;CHECK COUNT < limity
-0193    0069    2864    	GOTO 	LOOPYMAX	; JUMP IF COUNT !=  limity
-0194    006A            	;RESET  countY
-0195    006A    20D2    	call 	CLEANY
-0196    006B    0008    	return
-0197    006C            
-0198    006C            
-0199    006C            LOOPYREVERSEMAX:
-0200    006C    20E8    	call 	REVERSEEJEY
-0201    006D    0AA2        INCF    COUNTY,1
-0202    006E    0830    	MOVF  	LIMITMAXY, w
-0203    006F    0222    	SUBWF 	COUNTY,w
-0204    0070    1D03    	BTFSS 	STATUS,Z ;CHECK COUNT <32
-0205    0071    286C    	GOTO 	LOOPYREVERSEMAX
-0206    0072    20D2    	call 	CLEANY
-0207    0073    0008    	RETURN
-0208    0074            
-0209    0074            LOOPXREVERSEMAX:
-0210    0074    20ED    	call 	REVERSEEJEX
-0211    0075    0AA3        INCF    COUNTX,1
-0212    0076            	
-0213    0076    082F    	MOVF  	LIMITMAXX, w
-0214    0077    0223    	SUBWF 	COUNTX,w
-0215    0078    1D03    	BTFSS 	STATUS,Z ;CHECK COUNT <32
-0216    0079    2874    	GOTO 	LOOPXREVERSEMAX
-0217    007A    20D5    	call 	CLEANX
-0218    007B    0008    	RETURN
-0219    007C            
-0220    007C            ;-------------------------------------------------------------------
-0221    007C            ;                   Photocell comparation
-0222    007C            	;result		carry zero (status)
-0223    007C            	;positive     1		0
-0224    007C            	;zero		  1		1
-0225    007C            	;negative     0     0
-0226    007C            COMPARE: ;ASIGNAR A TMPCELL EL NUMERO EN LA ESCALA DE LUZ (0-9)
-0227    007C    00AE        MOVWF   Waffles
-0228    007D    022A        SUBWF   VARPHOTOCELL, W ; W = VARPHOTOCELL - TMPCELL 
-0229    007E    1C03        BTFSS   STATUS, C   ;IF VARPHOTOCELL < TMPCELL ; c=0 if negative
-0230    007F    2087        call    CHANGEPHOTOCELL   
-0231    0080            	;goto 	DimeElGordito 
-0232    0080    0008        return
-0233    0081            
-0234    0081            SETZERPY:
-0235    0081    3001    	MOVLW	0x01
-0236    0082    288E    	GOTO	SETy
-0237    0083            SETZERPX:
-0238    0083    3001    	MOVLW	0x01
-0239    0084    2894    	GOTO	SETX
-0240    0085            SETZERPBETA:
-0241    0085    3001    	MOVLW	0x01
-0242    0086    289A    	GOTO	SETBETA
-0243    0087            
-0244    0087            
-0245    0087            CHANGEPHOTOCELL:
-0246    0087    082E        MOVFW   waffles 	  ;DATO of Photocell
-0247    0088    00AA        MOVWF   VARPHOTOCELL  ;PHOTOCELL =  Waffles
-0248    0089            
-0249    0089                
-0250    0089            	;MOVFW   TMPY
-0251    0089    3000    	MOVLW	0x00
-0252    008A    022B    	SUBWF	TMPY,W			;TMPY - 0 
-0253    008B    1903    	BTFSC	STATUS,Z		;IF TMP == 0
-0254    008C    2881    	GOTO 	SETZERPY
-0255    008D    082B    	MOVFW   TMPY
-0256    008E            SETy:
-0257    008E    00B0        MOVWF   LIMITMAXY     ;LIMITMAXY = TMPY
-0258    008F            
-0259    008F                ;MOVFW   TMPX
-0260    008F    3000    	MOVLW	0x00
-0261    0090    022C    	SUBWF	TMPX,W
-0262    0091    1903    	BTFSC	STATUS,Z
-0263    0092    2883    	GOTO	SETZERPX
-0264    0093    082C    	MOVFW	TMPX
-0265    0094            SETX:
-0266    0094    00AF        MOVWF   LIMITMAXX     ;LIMITMAXX = TMPX
-0267    0095            
-0268    0095               ; MOVFW   TMPBETA
-0269    0095    3000       	MOVLW	0x00
-0270    0096    022D    	SUBWF	TMPBETA,W
-0271    0097    1903    	BTFSC	STATUS,Z
-0272    0098    2885    	GOTO	SETZERPBETA
-0273    0099    082D    	MOVFW	TMPBETA
-0274    009A            SETBETA:
-0275    009A    00B1        MOVWF   LIMITMAXBETA  ;LIMITMAXBETA = TMPBETA
-0276    009B    0008        return 
-0277    009C            
-0278    009C            ;---------------------------------------------------------------------
-0279    009C            ;                       LOOPS
-0280    009C            LOOPBETAREVERSE:
-0281    009C    20C1    	call 	LOOPXREVERSE
-0282    009D            	
-0283    009D    0AA8    	INCF	COUNTBETA,1
-0284    009E    0829    	MOVF	LIMITBETA, W	
-0285    009F    0228    	SUBWF	COUNTBETA, w
-0286    00A0    1D03    	BTFSS	STATUS,Z
-0287    00A1    289C    	GOTO	LOOPBETAREVERSE
-0288    00A2    20D8    	call	CLEANBETA
-0289    00A3    0008    	RETURN
-0290    00A4            
-0291    00A4            LOOPX: ; LOOP i <= LIMITX
-0292    00A4    20DE    	call 	EJEX
-0293    00A5            
-0294    00A5            	;MOVFW 	COUNTX
-0295    00A5            	;MOVWF	TMPX
-0296    00A5            
-0297    00A5            	;MOVE ON X
-0298    00A5    0AA3        INCF    COUNTX,1
-0299    00A6    0825    	MOVF  	LIMITX, w
-0300    00A7    0223    	SUBWF 	COUNTX,w
-0301    00A8    1D03    	BTFSS 	STATUS,Z ;CHECK COUNT < limitx
-0302    00A9    28A4    	GOTO 	LOOPX	; JUMP IF COUNT !=  limitx
-0303    00AA    20AD    	call	LOOPY ; MOVE Y
-0304    00AB            
-0305    00AB    20D5    	call 	CLEANX
-0306    00AC    0008    	RETURN
-0307    00AD            
-0308    00AD            LOOPY: ;LOOP i <= LIMITY
-0309    00AD    20E3    	call 	EJEY
-0310    00AE            
-0311    00AE    0822    	MOVFW 	COUNTY
-0312    00AF    00AB    	MOVWF	TMPY
-0313    00B0            
-0314    00B0            	;INSERT LOGIC COMPARE VALUE OF PHOTOCELL & SAVE IT
-0315    00B0                ;maybe add a delay here \o/
-0316    00B0    2146        call    GET_PHOTOCELL
-0317    00B1            
-0318    00B1            	;MOVE ON Y
-0319    00B1    0AA2        INCF    COUNTY,1
-0320    00B2    0824    	MOVF  	LIMITY, w
-0321    00B3    0222    	SUBWF 	COUNTY,w
-0322    00B4    1D03    	BTFSS 	STATUS,Z ;CHECK COUNT < limity
-0323    00B5    28AD    	GOTO 	LOOPY	; JUMP IF COUNT !=  limity
-0324    00B6            	;RESET Y
-0325    00B6    20D2    	call 	CLEANY
-0326    00B7    20B9    	call 	LOOPYREVERSE
-0327    00B8    0008    	return
-0328    00B9            
-0329    00B9            LOOPYREVERSE:
-0330    00B9    20E8    	call 	REVERSEEJEY
-0331    00BA    0AA2        INCF    COUNTY,1
-0332    00BB    0824    	MOVF  	LIMITY, w
-0333    00BC    0222    	SUBWF 	COUNTY,w
-0334    00BD    1D03    	BTFSS 	STATUS,Z ;CHECK COUNT <32
-0335    00BE    28B9    	GOTO 	LOOPYREVERSE
-0336    00BF    20D2    	call 	CLEANY
-0337    00C0    0008    	RETURN
-0338    00C1            
-0339    00C1            LOOPXREVERSE:
-0340    00C1    20ED    	call 	REVERSEEJEX
-0341    00C2    0AA3        INCF    COUNTX,1
-0342    00C3    0825    	MOVF  	LIMITX, w
-0343    00C4    0223    	SUBWF 	COUNTX,w
-0344    00C5    1D03    	BTFSS 	STATUS,Z ;CHECK COUNT <32
-0345    00C6    28C1    	GOTO 	LOOPXREVERSE
-0346    00C7    20D5    	call 	CLEANX
-0347    00C8    0008    	RETURN
-0348    00C9            ;-------------------------------------------------------------------
-0349    00C9            ;						DELAYS
-0350    00C9            Delay ; = 0.0001 seconds
-0351    00C9            			;496 cycles
-0352    00C9    30A5    	movlw	0xA5
-0353    00CA    00A6    	movwf	p1
-0354    00CB            Delay_0
-0355    00CB    0BA6    	decfsz	p1, f
-0356    00CC    28CB    	goto	Delay_0
-0357    00CD            
-0358    00CD            			;4 cycles (including call)
-0359    00CD    0008    	return
-0360    00CE            ;-------------------------------------------------------------------
-0361    00CE            ;						UTILITIES
-0362    00CE            MOVEVALUE:	
-0363    00CE    20C9    	call 	DELAY
-0364    00CF    0821    	MOVF	DATO, W  
-0365    00D0    0086    	MOVWF	PORTB	
-0366    00D1    0008    	RETURN
-0367    00D2            CLEANY:
-0368    00D2    3000    	MOVLW 	0x00  ;se asigna la literal a w (0x00)
-0369    00D3    00A2    	MOVWF 	COUNTY ;muevo w a COUNT 
-0370    00D4    0008    	RETURN
-0371    00D5            CLEANX:
-0372    00D5    3000    	MOVLW 	0x00  ;se asigna la literal a w (0x00)
-0373    00D6    00A3    	MOVWF 	COUNTX ;muevo w a COUNT 
-0374    00D7    0008    	RETURN
-0375    00D8            CLEANBETA:
-0376    00D8    3000    	MOVLW 	0x00  ;se asigna la literal a w (0x00)
-0377    00D9    00A8    	MOVWF 	COUNTBETA ;muevo w a COUNT 
-0378    00DA    0008    	RETURN
-0379    00DB            CLEANVARPHOTOCELL:
-0380    00DB    3000    	MOVLW	0x00
-0381    00DC    00AA    	MOVWF	VARPHOTOCELL
-0382    00DD    0008    	RETURN
-0383    00DE            EJEX:	
-0384    00DE    2116    	call	MV12
-0385    00DF    2106    	call	MV06
-0386    00E0    20FA    	call	MV03
-0387    00E1    2112    	call	MV09
-0388    00E2    0008    	RETURN
-0389    00E3            EJEY:	
-0390    00E3    2142    	call	MVY12
-0391    00E4    2132    	call	MVY6
-0392    00E5    2126    	call	MVY3
-0393    00E6    213E    	call	MVY9
-0394    00E7    0008    	RETURN
-0395    00E8            REVERSEEJEY:
-0396    00E8            	;call 	DELAY
-0397    00E8    213E    	call	MVY9
-0398    00E9    2126    	call	MVY3
-0399    00EA    2132    	call	MVY6
-0400    00EB    2142    	call	MVY12
-0401    00EC    0008    	RETURN
-0402    00ED            REVERSEEJEX:
-0403    00ED    2112    	call  	MV09
-0404    00EE    20FA    	call	MV03
-0405    00EF    2106    	call	MV06
-0406    00F0    2116    	call	MV12
-0407    00F1    0008    	RETURN
-0408    00F2            
-0409    00F2            MV01:	
-0410    00F2    3001    	MOVLW	B'00000001'
-0411    00F3    00A1    	MOVWF	DATO
-0412    00F4    20CE    	call	MOVEVALUE
-0413    00F5    0008    	RETURN
-0414    00F6            
-0415    00F6            MV02:
-0416    00F6    3002    	MOVLW	B'00000010'
-0417    00F7    00A1    	MOVWF	DATO
-0418    00F8    20CE    	call	MOVEVALUE
-0419    00F9    0008    	RETURN
-0420    00FA            MV03:	
-0421    00FA    3003    	MOVLW	B'00000011'
-0422    00FB    00A1    	MOVWF	DATO
-0423    00FC    20CE    	call	MOVEVALUE
-0424    00FD    0008    	RETURN
-0425    00FE            
-0426    00FE            MV04:
-0427    00FE    3004    	MOVLW	B'00000100'
-0428    00FF    00A1    	MOVWF	DATO
-0429    0100    20CE    	call	MOVEVALUE
-0430    0101    0008    	RETURN
-0431    0102            MV05:
-0432    0102    3005    	MOVLW	B'00000101'
-0433    0103    00A1    	MOVWF	DATO
-0434    0104    20CE    	call	MOVEVALUE
-0435    0105    0008    	RETURN
-0436    0106            MV06:
-0437    0106    3006    	MOVLW	B'00000110'
-0438    0107    00A1    	MOVWF	DATO
-0439    0108    20CE    	call	MOVEVALUE
-0440    0109    0008    	RETURN
-0441    010A            MV07:
-0442    010A    3007    	MOVLW	B'00000111'
-0443    010B    00A1    	MOVWF	DATO
-0444    010C    20CE    	call	MOVEVALUE
-0445    010D    0008    	RETURN
-0446    010E            MV08:
-0447    010E    3008    	MOVLW	B'00001000'
-0448    010F    00A1    	MOVWF	DATO
-0449    0110    20CE    	call	MOVEVALUE
-0450    0111    0008    	RETURN
-0451    0112            MV09:
-0452    0112    3009    	MOVLW	B'00001001'
-0453    0113    00A1    	MOVWF	DATO
-0454    0114    20CE    	call	MOVEVALUE
-0455    0115    0008    	RETURN
-0456    0116            MV12:
-0457    0116    300C    	MOVLW	B'00001100'
-0458    0117    00A1    	MOVWF	DATO
-0459    0118    20CE    	call	MOVEVALUE
-0460    0119    0008    	RETURN
-0461    011A            MVy0:
-0462    011A    3000    	MOVLW	B'00000000'
-0463    011B    00A1    	MOVWF	DATO
-0464    011C    20CE    	call	MOVEVALUE
-0465    011D    0008    	RETURN
-0466    011E            MVY1:
-0467    011E    3010    	MOVLW	B'00010000'
-0468    011F    00A1    	MOVWF	DATO
-0469    0120    20CE    	call	MOVEVALUE
-0470    0121    0008    	RETURN
-0471    0122            MVY2:
-0472    0122    3020    	MOVLW	B'00100000'
-0473    0123    00A1    	MOVWF	DATO
-0474    0124    20CE    	call	MOVEVALUE
-0475    0125    0008    	RETURN
-0476    0126            MVY3:
-0477    0126    3030    	MOVLW	B'00110000'
-0478    0127    00A1    	MOVWF	DATO
-0479    0128    20CE    	call	MOVEVALUE
-0480    0129    0008    	RETURN
-0481    012A            MVY4:
-0482    012A    3040    	MOVLW	B'01000000'
-0483    012B    00A1    	MOVWF	DATO
-0484    012C    20CE    	call	MOVEVALUE
-0485    012D    0008    	RETURN
-0486    012E            MVY5:
-0487    012E    3050    	MOVLW	B'01010000'
-0488    012F    00A1    	MOVWF	DATO
-0489    0130    20CE    	call	MOVEVALUE
-0490    0131    0008    	RETURN
-0491    0132            MVY6:
-0492    0132    3060    	MOVLW	B'01100000'
-0493    0133    00A1    	MOVWF	DATO
-0494    0134    20CE    	call	MOVEVALUE
-0495    0135    0008    	RETURN
-0496    0136            MVY7:
-0497    0136    3070    	MOVLW	B'01110000'
-0498    0137    00A1    	MOVWF	DATO
-0499    0138    20CE    	call	MOVEVALUE
-0500    0139    0008    	RETURN
-0501    013A            MVY8:
-0502    013A    3080    	MOVLW	B'10000000'
-0503    013B    00A1    	MOVWF	DATO
-0504    013C    20CE    	call	MOVEVALUE
-0505    013D    0008    	RETURN
-0506    013E            MVY9:
-0507    013E    3090    	MOVLW	B'10010000'
-0508    013F    00A1    	MOVWF	DATO
-0509    0140    20CE    	call	MOVEVALUE
-0510    0141    0008    	RETURN
-0511    0142            MVY12:
-0512    0142    30C0    	MOVLW	B'11000000'
-0513    0143    00A1    	MOVWF	DATO
-0514    0144    20CE    	call	MOVEVALUE
-0515    0145    0008    	RETURN
-0516    0146            ;-----------------------------------------------------------------
-0517    0146            ;							PHOTOCELL
-0518    0146            GET_PHOTOCELL:
-0519    0146            _bucle:
-0520    0146            	;btfss INTCON,T0IF
-0521    0146            	;goto _bucle ;Esperar que el timer0 desborde
-0522    0146            	; SE DEBE DE COLOCAR UN DELAY PARA QUE ESPERE LA CONVERSION
-0523    0146    1503    	BSF  STATUS,Z
-0524    0147    219E    	CALL _PRESPERA
-0525    0148    110B    	bcf INTCON,T0IF ;Limpiar el indicador de desborde
-0526    0149    151F    	bsf ADCON0,GO ;Comenzar conversion A/D
-0527    014A            _espera:
-0528    014A    191F    	btfsc ADCON0,GO ;ADCON0 es 0? (la conversion esta completa?)
-0529    014B    294A    	goto _espera ;No, ir _espera
-0530    014C    081E    	movf ADRESH,W ;Si, W=ADRESH
-0531    014D            	; 1Eh ADRESH A/D Result Register High Byte
-0532    014D            	; 9Eh ADRESL A/D Result Register Low Byte 
-0533    014D    00B8    	movwf ADC ;ADC=W
-0534    014E    0838    	movfw ADC ;W = ADC
-0535    014F    2952        	goto  V1
-0536    0150            returnExec:
-0537    0150    207C    	call 	COMPARE
-0538    0151    0008    	return
-0539    0152            
-0540    0152            V1:
-0541    0152    30D2        movlw D'210'
-0542    0153    0238        subwf ADC, W
-0543    0154    1C03        btfss STATUS, C
-0544    0155    295A        goto V2
-0545    0156    3000        movlw 0x0
-0546    0157    00AE        movwf waffles
-0547    0158    21AF        call case0
-0548    0159    2950        goto returnExec
-0549    015A            
-0550    015A            V2:
-0551    015A    30C2        movlw D'194'
-0552    015B    0238        subwf ADC, W
-0553    015C    1C03        btfss STATUS, C
-0554    015D    2962        goto V3
-0555    015E    3001        movlw 0x1
-0556    015F    00AE        movwf waffles
-0557    0160    21B7        call case1
-0558    0161    2950        goto returnExec
-0559    0162            
-0560    0162            V3:
-0561    0162    30AE        movlw D'174'
-0562    0163    0238        subwf ADC, W
-0563    0164    1C03        btfss STATUS, C
-0564    0165    296A        goto V4
-0565    0166    3002        movlw 0x2
-0566    0167    00AE        movwf waffles
-0567    0168    21BF        call case2
-0568    0169    2950        goto returnExec
-0569    016A            
-0570    016A            V4:
-0571    016A    309E        movlw D'158'
-0572    016B    0238        subwf ADC, W
-0573    016C    1C03        btfss STATUS, C
-0574    016D    2972        goto V5
-0575    016E    3003        movlw 0x3
-0576    016F    00AE        movwf waffles
-0577    0170    21C7        call case3
-0578    0171    2950        goto returnExec
-0579    0172            
-0580    0172            V5:
-0581    0172    308A        movlw D'138'
-0582    0173    0238        subwf ADC, W
-0583    0174    1C03        btfss STATUS, C
-0584    0175    297A        goto V6
-0585    0176    3004        movlw 0x4
-0586    0177    00AE        movwf waffles
-0587    0178    21CF        call case4
-0588    0179    2950        goto returnExec
-0589    017A            
-0590    017A            V6:
-0591    017A    3075        movlw D'117'
-0592    017B    0238        subwf ADC, W
-0593    017C    1C03        btfss STATUS, C
-0594    017D    2982        goto V7
-0595    017E    3005        movlw 0x5
-0596    017F    00AE        movwf waffles
-0597    0180    21D7        call case5
-0598    0181    2950        goto returnExec
-0599    0182            
-0600    0182            V7:
-0601    0182    3052        movlw D'82'
-0602    0183    0238        subwf ADC, W
-0603    0184    1C03        btfss STATUS, C
-0604    0185    298A        goto V8
-0605    0186    3006        movlw 0x6
-0606    0187    00AE        movwf waffles
-0607    0188    21DF        call case6
-0608    0189    2950        goto returnExec
-0609    018A            
-0610    018A            V8:
-0611    018A    3033        movlw D'51'
-0612    018B    0238        subwf ADC, W
-0613    018C    1C03        btfss STATUS, C
-0614    018D    2992        goto V9
-0615    018E    3007        movlw 0x7
-0616    018F    00AE        movwf waffles
-0617    0190    21E7        call case7
-0618    0191    2950        goto returnExec
-0619    0192            
-0620    0192            V9:
-0621    0192    301C        movlw D'28'
-0622    0193    0238        subwf ADC, W
-0623    0194    1C03        btfss STATUS, C
-0624    0195    299A        goto V10
-0625    0196    3008        movlw 0x8
-0626    0197    00AE        movwf waffles
-0627    0198    21EF        call case8
-0628    0199    2950        goto returnExec
-0629    019A            
-0630    019A            V10:
-0631    019A                ; movlw D'0'
-0632    019A                ; subwf ADC, W
-0633    019A                ; btfss STATUS, N
-0634    019A                ; goto V10<--
-0635    019A                ;btfsc STATUS, C
-0636    019A    3009        movlw 0x9
-0637    019B    00AE        movwf waffles
-0638    019C    21F7        call case9
-0639    019D    2950        goto returnExec
-0640    019E            
-0641    019E            _PRESPERA:
-0642    019E    30FF    	MOVLW 0XFF
-0643    019F    00C0    	MOVWF CounterA
-0644    01A0    00BF    	MOVWF COUNTERb
-0645    01A1    00BE    	MOVWF COUNTERc	
-0646    01A2    21A4    	CALL ESPE
-0647    01A3    0008    	RETURN	
-0648    01A4            	
-0649    01A4            ESPE:
-0650    01A4    0BC0    	DECFSZ	CounterA,0X01
-0651    01A5    29A4    	GOTO	ESPE
-0652    01A6    21A8    	CALL	ESPE2
-0653    01A7    0008    	RETURN
-0654    01A8            ESPE2:
-0655    01A8    0BBF    	DECFSZ	COUNTERb,0X01
-0656    01A9    29A8    	GOTO	ESPE2
-0657    01AA    21AC    	CALL	ESPE3
-0658    01AB    0008    	RETURN
-0659    01AC            ESPE3:
-0660    01AC    0BBE    	DECFSZ	COUNTERc,0X01
-0661    01AD    29AC    	GOTO	ESPE3
-0662    01AE    0008    	RETURN	
-0663    01AF            
-0664    01AF            case0
-0665    01AF    1485        bsf PORTA, 1
-0666    01B0    1505        bsf PORTA, 2
-0667    01B1    1585        bsf PORTA, 3
-0668    01B2    1605        bsf PORTA, 4
-0669    01B3    1685        bsf PORTA, 5
-0670    01B4    1409        bsf PORTE, 0
-0671    01B5    1089        bcf PORTE, 1
-0672    01B6    0008        return 
-0673    01B7            case1
-0674    01B7                ;movlw 0x0
-0675    01B7    1085        bcf PORTA, 1
-0676    01B8    1205        bcf PORTA, 4
-0677    01B9    1285        bcf PORTA, 5
-0678    01BA    1009        bcf PORTE, 0
-0679    01BB    1089        bcf PORTE, 1
-0680    01BC                ;movlw 0x1
-0681    01BC    1505        bsf PORTA, 2
-0682    01BD    1585        bsf PORTA, 3
-0683    01BE    0008        return
-0684    01BF            case2
-0685    01BF                ;movlw 0x1
-0686    01BF    1485        bsf PORTA, 1
-0687    01C0    1505        bsf PORTA, 2
-0688    01C1    1605        bsf PORTA, 4
-0689    01C2    1685        bsf PORTA, 5
-0690    01C3    1489        bsf PORTE, 1
-0691    01C4                ;movlw 0x0
-0692    01C4    1185        bcf PORTA, 3
-0693    01C5    1009        bcf PORTE, 0
-0694    01C6    0008        return
-0695    01C7            case3
-0696    01C7                ;movlw 0x1
-0697    01C7    1485        bsf PORTA, 1
-0698    01C8    1505        bsf PORTA, 2
-0699    01C9    1585        bsf PORTA, 3
-0700    01CA    1605        bsf PORTA, 4
-0701    01CB    1489        bsf PORTE, 1
-0702    01CC                ;movlw 0x0
-0703    01CC    1009        bcf PORTE, 0
-0704    01CD    1285        bcf PORTA, 5
-0705    01CE    0008        return
-0706    01CF            case4
-0707    01CF                ;movlw 0x1
-0708    01CF    1505        bsf PORTA, 2
-0709    01D0    1585        bsf PORTA, 3
-0710    01D1    1409        bsf PORTE, 0
-0711    01D2    1489        bsf PORTE, 1
-0712    01D3                ;movlw 0x0
-0713    01D3    1085        bcf PORTA, 1
-0714    01D4    1205        bcf PORTA, 4
-0715    01D5    1285        bcf PORTA, 5
-0716    01D6    0008        return
-0717    01D7            case5
-0718    01D7                ;movlw 0x1
-0719    01D7    1585        bsf PORTA, 3
-0720    01D8    1605        bsf PORTA, 4
-0721    01D9    1409        bsf PORTE, 0
-0722    01DA    1489        bsf PORTE, 1
-0723    01DB    1485        bsf PORTA, 1
-0724    01DC                ;movlw 0x0
-0725    01DC    1285        bcf PORTA, 5
-0726    01DD    1105        bcf PORTA, 2
-0727    01DE    0008        return
-0728    01DF            case6
-0729    01DF                ;movlw 0x1
-0730    01DF    1585        bsf PORTA, 3
-0731    01E0    1605        bsf PORTA, 4
-0732    01E1    1685        bsf PORTA, 5
-0733    01E2    1409        bsf PORTE, 0
-0734    01E3    1489        bsf PORTE, 1
-0735    01E4    1485        bsf PORTA, 1
-0736    01E5                ;movlw 0x0
-0737    01E5    1105        bcf PORTA, 2
-0738    01E6    0008        return
-0739    01E7            case7
-0740    01E7                ;movlw 0x1
+0118    0036    220B    	CALL	SHOWVARDISPLAY
+0119    0037            
+0120    0037    20CF    	call 	BigDelay 
+0121    0038    2834    	GOTO	BUTTONShowGroupNumber
+0122    0039            
+0123    0039            
+0124    0039    2052        call    RESTART      ;RETURN TO ORIGINAL POSITION & CLEAN EVERYTHING
+0125    003A    282D        GOTO    MAIN
+0126    003B    2A84        GOTO    END
+0127    003C            SEARCH:
+0128    003C    20A5    	call	LOOPX ; MOVE X AND Y
+0129    003D            
+0130    003D    0828    	MOVF 	COUNTBETA, W
+0131    003E    00AD    	MOVWF	TMPBETA
+0132    003F            
+0133    003F    0AA8    	INCF	COUNTBETA,1
+0134    0040    0829    	MOVF	LIMITBETA, W	
+0135    0041    0228    	SUBWF	COUNTBETA, w
+0136    0042    1D03    	BTFSS	STATUS,Z
+0137    0043    283C    	GOTO	SEARCH
+0138    0044    20E4    	call	CLEANBETA   ;CLEAN COUNTBETA
+0139    0045    209D    	call 	LOOPBETAREVERSE    ;RETURN TO ORIGINAL POSITION
+0140    0046    0008        RETURN
+0141    0047            
+0142    0047            ;------------------------------------------------------------------
+0143    0047                                    ;MOVE TO GREATER
+0144    0047            MOVEGREATER:
+0145    0047    2065    	call	LOOPYMAX ; MOVE Y
+0146    0048    204A    	call	LOOPXMAXBETA ; MOVE X 
+0147    0049            	;call 	LOOPXMAX
+0148    0049    0008    	return
+0149    004A            LOOPXMAXBETA:
+0150    004A    205D    	call 	LOOPXMAX
+0151    004B            
+0152    004B    0AA8    	INCF	COUNTBETA,1
+0153    004C    0831    	MOVF	LIMITMAXBETA, W	
+0154    004D    0228    	SUBWF	COUNTBETA, w
+0155    004E    1D03    	BTFSS	STATUS,Z
+0156    004F    284A    	GOTO	LOOPXMAXBETA
+0157    0050    20E4        call	CLEANBETA
+0158    0051    0008        RETURN
+0159    0052            
+0160    0052            RESTART:
+0161    0052    2056        call    LOOPMAXBETAREVERSE
+0162    0053    206D        call 	LOOPYREVERSEMAX
+0163    0054    20E7    	call 	CLEANVARPHOTOCELL
+0164    0055    0008        RETURN
+0165    0056            VAR
+0166    0056            LOOPMAXBETAREVERSE:
+0167    0056    2075    	call 	LOOPXREVERSEMAX
+0168    0057            	
+0169    0057    0AA8    	INCF	COUNTBETA,1
+0170    0058    0831    	MOVF	LIMITMAXBETA, W	
+0171    0059    0228    	SUBWF	COUNTBETA, w
+0172    005A    1D03    	BTFSS	STATUS,Z
+0173    005B    2856    	GOTO	LOOPMAXBETAREVERSE
+0174    005C    0008        RETURN
+0175    005D            
+0176    005D            LOOPXMAX:	
+0177    005D    20EA    	call 	EJEX
+0178    005E            	;MOVE ON X
+0179    005E    0AA3        INCF    COUNTX,1
+0180    005F    0825    	MOVF  	LIMITX, w
+0181    0060    0223    	SUBWF 	COUNTX,w
+0182    0061    1D03    	BTFSS 	STATUS,Z ;CHECK COUNT < limitx
+0183    0062    285D    	GOTO 	LOOPXMAX	; JUMP IF COUNT !=  limitx
+0184    0063    20E1    	call 	CLEANX
+0185    0064    0008    	RETURN
+0186    0065            
+0187    0065            LOOPYMAX:
+0188    0065    20EF    	call 	EJEY
+0189    0066            	;MOVE ON Y
+0190    0066    0AA2        INCF    COUNTY,1 ;count++
+0191    0067    0830    	MOVF  	LIMITMAXY, w
+0192    0068    0222    	SUBWF 	COUNTY,w
+0193    0069    1D03    	BTFSS 	STATUS,Z ;CHECK COUNT < limity
+0194    006A    2865    	GOTO 	LOOPYMAX	; JUMP IF COUNT !=  limity
+0195    006B            	;RESET  countY
+0196    006B    20DE    	call 	CLEANY
+0197    006C    0008    	return
+0198    006D            
+0199    006D            
+0200    006D            LOOPYREVERSEMAX:
+0201    006D    20F4    	call 	REVERSEEJEY
+0202    006E    0AA2        INCF    COUNTY,1
+0203    006F    0830    	MOVF  	LIMITMAXY, w
+0204    0070    0222    	SUBWF 	COUNTY,w
+0205    0071    1D03    	BTFSS 	STATUS,Z ;CHECK COUNT <32
+0206    0072    286D    	GOTO 	LOOPYREVERSEMAX
+0207    0073    20DE    	call 	CLEANY
+0208    0074    0008    	RETURN
+0209    0075            
+0210    0075            LOOPXREVERSEMAX:
+0211    0075    20F9    	call 	REVERSEEJEX
+0212    0076    0AA3        INCF    COUNTX,1
+0213    0077            	
+0214    0077    082F    	MOVF  	LIMITMAXX, w
+0215    0078    0223    	SUBWF 	COUNTX,w
+0216    0079    1D03    	BTFSS 	STATUS,Z ;CHECK COUNT <32
+0217    007A    2875    	GOTO 	LOOPXREVERSEMAX
+0218    007B    20E1    	call 	CLEANX
+0219    007C    0008    	RETURN
+0220    007D            
+0221    007D            ;-------------------------------------------------------------------
+0222    007D            ;                   Photocell comparation
+0223    007D            	;result		carry zero (status)
+0224    007D            	;positive     1		0
+0225    007D            	;zero		  1		1
+0226    007D            	;negative     0     0
+0227    007D            COMPARE: ;ASIGNAR A TMPCELL EL NUMERO EN LA ESCALA DE LUZ (0-9)
+0228    007D    00AE        MOVWF   Waffles
+0229    007E    022A        SUBWF   VARPHOTOCELL, W ; W = VARPHOTOCELL - TMPCELL 
+0230    007F    1C03        BTFSS   STATUS, C   ;IF VARPHOTOCELL < TMPCELL ; c=0 if negative
+0231    0080    2088        call    CHANGEPHOTOCELL   
+0232    0081            	;goto 	DimeElGordito 
+0233    0081    0008        return
+0234    0082            
+0235    0082            SETZERPY:
+0236    0082    3001    	MOVLW	0x01
+0237    0083    288F    	GOTO	SETy
+0238    0084            SETZERPX:
+0239    0084    3001    	MOVLW	0x01
+0240    0085    2895    	GOTO	SETX
+0241    0086            SETZERPBETA:
+0242    0086    3001    	MOVLW	0x01
+0243    0087    289B    	GOTO	SETBETA
+0244    0088            
+0245    0088            
+0246    0088            CHANGEPHOTOCELL:
+0247    0088    082E        MOVFW   waffles 	  ;DATO of Photocell
+0248    0089    00AA        MOVWF   VARPHOTOCELL  ;PHOTOCELL =  Waffles
+0249    008A            
+0250    008A                
+0251    008A            	;MOVFW   TMPY
+0252    008A    3000    	MOVLW	0x00
+0253    008B    022B    	SUBWF	TMPY,W			;TMPY - 0 
+0254    008C    1903    	BTFSC	STATUS,Z		;IF TMP == 0
+0255    008D    2882    	GOTO 	SETZERPY
+0256    008E    082B    	MOVFW   TMPY
+0257    008F            SETy:
+0258    008F    00B0        MOVWF   LIMITMAXY     ;LIMITMAXY = TMPY
+0259    0090            
+0260    0090                ;MOVFW   TMPX
+0261    0090    3000    	MOVLW	0x00
+0262    0091    022C    	SUBWF	TMPX,W
+0263    0092    1903    	BTFSC	STATUS,Z
+0264    0093    2884    	GOTO	SETZERPX
+0265    0094    082C    	MOVFW	TMPX
+0266    0095            SETX:
+0267    0095    00AF        MOVWF   LIMITMAXX     ;LIMITMAXX = TMPX
+0268    0096            
+0269    0096               ; MOVFW   TMPBETA
+0270    0096    3000       	MOVLW	0x00
+0271    0097    022D    	SUBWF	TMPBETA,W
+0272    0098    1903    	BTFSC	STATUS,Z
+0273    0099    2886    	GOTO	SETZERPBETA
+0274    009A    082D    	MOVFW	TMPBETA
+0275    009B            SETBETA:
+0276    009B    00B1        MOVWF   LIMITMAXBETA  ;LIMITMAXBETA = TMPBETA
+0277    009C    0008        return 
+0278    009D            
+0279    009D            ;---------------------------------------------------------------------
+0280    009D            ;                       LOOPS
+0281    009D            LOOPBETAREVERSE:
+0282    009D    20C2    	call 	LOOPXREVERSE
+0283    009E            	
+0284    009E    0AA8    	INCF	COUNTBETA,1
+0285    009F    0829    	MOVF	LIMITBETA, W	
+0286    00A0    0228    	SUBWF	COUNTBETA, w
+0287    00A1    1D03    	BTFSS	STATUS,Z
+0288    00A2    289D    	GOTO	LOOPBETAREVERSE
+0289    00A3    20E4    	call	CLEANBETA
+0290    00A4    0008    	RETURN
+0291    00A5            
+0292    00A5            LOOPX: ; LOOP i <= LIMITX
+0293    00A5    20EA    	call 	EJEX
+0294    00A6            
+0295    00A6            	;MOVFW 	COUNTX
+0296    00A6            	;MOVWF	TMPX
+0297    00A6            
+0298    00A6            	;MOVE ON X
+0299    00A6    0AA3        INCF    COUNTX,1
+0300    00A7    0825    	MOVF  	LIMITX, w
+0301    00A8    0223    	SUBWF 	COUNTX,w
+0302    00A9    1D03    	BTFSS 	STATUS,Z ;CHECK COUNT < limitx
+0303    00AA    28A5    	GOTO 	LOOPX	; JUMP IF COUNT !=  limitx
+0304    00AB    20AE    	call	LOOPY ; MOVE Y
+0305    00AC            
+0306    00AC    20E1    	call 	CLEANX
+0307    00AD    0008    	RETURN
+0308    00AE            
+0309    00AE            LOOPY: ;LOOP i <= LIMITY
+0310    00AE    20EF    	call 	EJEY
+0311    00AF            
+0312    00AF    0822    	MOVFW 	COUNTY
+0313    00B0    00AB    	MOVWF	TMPY
+0314    00B1            
+0315    00B1            	;INSERT LOGIC COMPARE VALUE OF PHOTOCELL & SAVE IT
+0316    00B1                ;maybe add a delay here \o/
+0317    00B1    2152        call    GET_PHOTOCELL
+0318    00B2            
+0319    00B2            	;MOVE ON Y
+0320    00B2    0AA2        INCF    COUNTY,1
+0321    00B3    0824    	MOVF  	LIMITY, w
+0322    00B4    0222    	SUBWF 	COUNTY,w
+0323    00B5    1D03    	BTFSS 	STATUS,Z ;CHECK COUNT < limity
+0324    00B6    28AE    	GOTO 	LOOPY	; JUMP IF COUNT !=  limity
+0325    00B7            	;RESET Y
+0326    00B7    20DE    	call 	CLEANY
+0327    00B8    20BA    	call 	LOOPYREVERSE
+0328    00B9    0008    	return
+0329    00BA            
+0330    00BA            LOOPYREVERSE:
+0331    00BA    20F4    	call 	REVERSEEJEY
+0332    00BB    0AA2        INCF    COUNTY,1
+0333    00BC    0824    	MOVF  	LIMITY, w
+0334    00BD    0222    	SUBWF 	COUNTY,w
+0335    00BE    1D03    	BTFSS 	STATUS,Z ;CHECK COUNT <32
+0336    00BF    28BA    	GOTO 	LOOPYREVERSE
+0337    00C0    20DE    	call 	CLEANY
+0338    00C1    0008    	RETURN
+0339    00C2            
+0340    00C2            LOOPXREVERSE:
+0341    00C2    20F9    	call 	REVERSEEJEX
+0342    00C3    0AA3        INCF    COUNTX,1
+0343    00C4    0825    	MOVF  	LIMITX, w
+0344    00C5    0223    	SUBWF 	COUNTX,w
+0345    00C6    1D03    	BTFSS 	STATUS,Z ;CHECK COUNT <32
+0346    00C7    28C2    	GOTO 	LOOPXREVERSE
+0347    00C8    20E1    	call 	CLEANX
+0348    00C9    0008    	RETURN
+0349    00CA            ;-------------------------------------------------------------------
+0350    00CA            ;						DELAYS
+0351    00CA            Delay ; = 0.0001 seconds
+0352    00CA            			;496 cycles
+0353    00CA    30A5    	movlw	0xA5
+0354    00CB    00A6    	movwf	p1
+0355    00CC            Delay_0
+0356    00CC    0BA6    	decfsz	p1, f
+0357    00CD    28CC    	goto	Delay_0
+0358    00CE            			;4 cycles (including call)
+0359    00CE    0008    	return
+0360    00CF            
+0361    00CF            BigDelay ; = 0.05 sconds
+0362    00CF            			;249993 cycles
+0363    00CF    304E    	movlw	0x4E
+0364    00D0    00A6    	movwf	p1
+0365    00D1    30C4    	movlw	0xC4
+0366    00D2    00A7    	movwf	p2
+0367    00D3            Delay_1
+0368    00D3    0BA6    	decfsz	p1, f
+0369    00D4    28D6    	goto	$+2
+0370    00D5    0BA7    	decfsz	p2, f
+0371    00D6    28D3    	goto	Delay_1
+0372    00D7            
+0373    00D7            			;3 cycles
+0374    00D7    28D8    	goto	$+1
+0375    00D8    0000    	nop
+0376    00D9            			;4 cycles (including call)
+0377    00D9    0008    	return
+0378    00DA            ;-------------------------------------------------------------------
+0379    00DA            ;						UTILITIES
+0380    00DA            MOVEVALUE:	
+0381    00DA    20CA    	call 	DELAY
+0382    00DB    0821    	MOVF	DATO, W  
+0383    00DC    0086    	MOVWF	PORTB	
+0384    00DD    0008    	RETURN
+0385    00DE            CLEANY:
+0386    00DE    3000    	MOVLW 	0x00  ;se asigna la literal a w (0x00)
+0387    00DF    00A2    	MOVWF 	COUNTY ;muevo w a COUNT 
+0388    00E0    0008    	RETURN
+0389    00E1            CLEANX:
+0390    00E1    3000    	MOVLW 	0x00  ;se asigna la literal a w (0x00)
+0391    00E2    00A3    	MOVWF 	COUNTX ;muevo w a COUNT 
+0392    00E3    0008    	RETURN
+0393    00E4            CLEANBETA:
+0394    00E4    3000    	MOVLW 	0x00  ;se asigna la literal a w (0x00)
+0395    00E5    00A8    	MOVWF 	COUNTBETA ;muevo w a COUNT 
+0396    00E6    0008    	RETURN
+0397    00E7            CLEANVARPHOTOCELL:
+0398    00E7    3000    	MOVLW	0x00
+0399    00E8    00AA    	MOVWF	VARPHOTOCELL
+0400    00E9    0008    	RETURN
+0401    00EA            EJEX:	
+0402    00EA    2122    	call	MV12
+0403    00EB    2112    	call	MV06
+0404    00EC    2106    	call	MV03
+0405    00ED    211E    	call	MV09
+0406    00EE    0008    	RETURN
+0407    00EF            EJEY:	
+0408    00EF    214E    	call	MVY12
+0409    00F0    213E    	call	MVY6
+0410    00F1    2132    	call	MVY3
+0411    00F2    214A    	call	MVY9
+0412    00F3    0008    	RETURN
+0413    00F4            REVERSEEJEY:
+0414    00F4            	;call 	DELAY
+0415    00F4    214A    	call	MVY9
+0416    00F5    2132    	call	MVY3
+0417    00F6    213E    	call	MVY6
+0418    00F7    214E    	call	MVY12
+0419    00F8    0008    	RETURN
+0420    00F9            REVERSEEJEX:
+0421    00F9    211E    	call  	MV09
+0422    00FA    2106    	call	MV03
+0423    00FB    2112    	call	MV06
+0424    00FC    2122    	call	MV12
+0425    00FD    0008    	RETURN
+0426    00FE            
+0427    00FE            MV01:	
+0428    00FE    3001    	MOVLW	B'00000001'
+0429    00FF    00A1    	MOVWF	DATO
+0430    0100    20DA    	call	MOVEVALUE
+0431    0101    0008    	RETURN
+0432    0102            
+0433    0102            MV02:
+0434    0102    3002    	MOVLW	B'00000010'
+0435    0103    00A1    	MOVWF	DATO
+0436    0104    20DA    	call	MOVEVALUE
+0437    0105    0008    	RETURN
+0438    0106            MV03:	
+0439    0106    3003    	MOVLW	B'00000011'
+0440    0107    00A1    	MOVWF	DATO
+0441    0108    20DA    	call	MOVEVALUE
+0442    0109    0008    	RETURN
+0443    010A            
+0444    010A            MV04:
+0445    010A    3004    	MOVLW	B'00000100'
+0446    010B    00A1    	MOVWF	DATO
+0447    010C    20DA    	call	MOVEVALUE
+0448    010D    0008    	RETURN
+0449    010E            MV05:
+0450    010E    3005    	MOVLW	B'00000101'
+0451    010F    00A1    	MOVWF	DATO
+0452    0110    20DA    	call	MOVEVALUE
+0453    0111    0008    	RETURN
+0454    0112            MV06:
+0455    0112    3006    	MOVLW	B'00000110'
+0456    0113    00A1    	MOVWF	DATO
+0457    0114    20DA    	call	MOVEVALUE
+0458    0115    0008    	RETURN
+0459    0116            MV07:
+0460    0116    3007    	MOVLW	B'00000111'
+0461    0117    00A1    	MOVWF	DATO
+0462    0118    20DA    	call	MOVEVALUE
+0463    0119    0008    	RETURN
+0464    011A            MV08:
+0465    011A    3008    	MOVLW	B'00001000'
+0466    011B    00A1    	MOVWF	DATO
+0467    011C    20DA    	call	MOVEVALUE
+0468    011D    0008    	RETURN
+0469    011E            MV09:
+0470    011E    3009    	MOVLW	B'00001001'
+0471    011F    00A1    	MOVWF	DATO
+0472    0120    20DA    	call	MOVEVALUE
+0473    0121    0008    	RETURN
+0474    0122            MV12:
+0475    0122    300C    	MOVLW	B'00001100'
+0476    0123    00A1    	MOVWF	DATO
+0477    0124    20DA    	call	MOVEVALUE
+0478    0125    0008    	RETURN
+0479    0126            MVy0:
+0480    0126    3000    	MOVLW	B'00000000'
+0481    0127    00A1    	MOVWF	DATO
+0482    0128    20DA    	call	MOVEVALUE
+0483    0129    0008    	RETURN
+0484    012A            MVY1:
+0485    012A    3010    	MOVLW	B'00010000'
+0486    012B    00A1    	MOVWF	DATO
+0487    012C    20DA    	call	MOVEVALUE
+0488    012D    0008    	RETURN
+0489    012E            MVY2:
+0490    012E    3020    	MOVLW	B'00100000'
+0491    012F    00A1    	MOVWF	DATO
+0492    0130    20DA    	call	MOVEVALUE
+0493    0131    0008    	RETURN
+0494    0132            MVY3:
+0495    0132    3030    	MOVLW	B'00110000'
+0496    0133    00A1    	MOVWF	DATO
+0497    0134    20DA    	call	MOVEVALUE
+0498    0135    0008    	RETURN
+0499    0136            MVY4:
+0500    0136    3040    	MOVLW	B'01000000'
+0501    0137    00A1    	MOVWF	DATO
+0502    0138    20DA    	call	MOVEVALUE
+0503    0139    0008    	RETURN
+0504    013A            MVY5:
+0505    013A    3050    	MOVLW	B'01010000'
+0506    013B    00A1    	MOVWF	DATO
+0507    013C    20DA    	call	MOVEVALUE
+0508    013D    0008    	RETURN
+0509    013E            MVY6:
+0510    013E    3060    	MOVLW	B'01100000'
+0511    013F    00A1    	MOVWF	DATO
+0512    0140    20DA    	call	MOVEVALUE
+0513    0141    0008    	RETURN
+0514    0142            MVY7:
+0515    0142    3070    	MOVLW	B'01110000'
+0516    0143    00A1    	MOVWF	DATO
+0517    0144    20DA    	call	MOVEVALUE
+0518    0145    0008    	RETURN
+0519    0146            MVY8:
+0520    0146    3080    	MOVLW	B'10000000'
+0521    0147    00A1    	MOVWF	DATO
+0522    0148    20DA    	call	MOVEVALUE
+0523    0149    0008    	RETURN
+0524    014A            MVY9:
+0525    014A    3090    	MOVLW	B'10010000'
+0526    014B    00A1    	MOVWF	DATO
+0527    014C    20DA    	call	MOVEVALUE
+0528    014D    0008    	RETURN
+0529    014E            MVY12:
+0530    014E    30C0    	MOVLW	B'11000000'
+0531    014F    00A1    	MOVWF	DATO
+0532    0150    20DA    	call	MOVEVALUE
+0533    0151    0008    	RETURN
+0534    0152            ;-----------------------------------------------------------------
+0535    0152            ;							PHOTOCELL
+0536    0152            GET_PHOTOCELL:
+0537    0152            _bucle:
+0538    0152            	;btfss INTCON,T0IF
+0539    0152            	;goto _bucle ;Esperar que el timer0 desborde
+0540    0152            	; SE DEBE DE COLOCAR UN DELAY PARA QUE ESPERE LA CONVERSION
+0541    0152    1503    	BSF  STATUS,Z
+0542    0153    21AA    	CALL _PRESPERA
+0543    0154    110B    	bcf INTCON,T0IF ;Limpiar el indicador de desborde
+0544    0155    151F    	bsf ADCON0,GO ;Comenzar conversion A/D
+0545    0156            _espera:
+0546    0156    191F    	btfsc ADCON0,GO ;ADCON0 es 0? (la conversion esta completa?)
+0547    0157    2956    	goto _espera ;No, ir _espera
+0548    0158    081E    	movf ADRESH,W ;Si, W=ADRESH
+0549    0159            	; 1Eh ADRESH A/D Result Register High Byte
+0550    0159            	; 9Eh ADRESL A/D Result Register Low Byte 
+0551    0159    00B8    	movwf ADC ;ADC=W
+0552    015A    0838    	movfw ADC ;W = ADC
+0553    015B    295E        	goto  V1
+0554    015C            returnExec:
+0555    015C    207D    	call 	COMPARE
+0556    015D    0008    	return
+0557    015E            
+0558    015E            V1:
+0559    015E    30D2        movlw D'210'
+0560    015F    0238        subwf ADC, W
+0561    0160    1C03        btfss STATUS, C
+0562    0161    2966        goto V2
+0563    0162    3000        movlw 0x0
+0564    0163    00AE        movwf waffles
+0565    0164    21BB        call case0
+0566    0165    295C        goto returnExec
+0567    0166            
+0568    0166            V2:
+0569    0166    30C2        movlw D'194'
+0570    0167    0238        subwf ADC, W
+0571    0168    1C03        btfss STATUS, C
+0572    0169    296E        goto V3
+0573    016A    3001        movlw 0x1
+0574    016B    00AE        movwf waffles
+0575    016C    21C3        call case1
+0576    016D    295C        goto returnExec
+0577    016E            
+0578    016E            V3:
+0579    016E    30AE        movlw D'174'
+0580    016F    0238        subwf ADC, W
+0581    0170    1C03        btfss STATUS, C
+0582    0171    2976        goto V4
+0583    0172    3002        movlw 0x2
+0584    0173    00AE        movwf waffles
+0585    0174    21CB        call case2
+0586    0175    295C        goto returnExec
+0587    0176            
+0588    0176            V4:
+0589    0176    309E        movlw D'158'
+0590    0177    0238        subwf ADC, W
+0591    0178    1C03        btfss STATUS, C
+0592    0179    297E        goto V5
+0593    017A    3003        movlw 0x3
+0594    017B    00AE        movwf waffles
+0595    017C    21D3        call case3
+0596    017D    295C        goto returnExec
+0597    017E            
+0598    017E            V5:
+0599    017E    308A        movlw D'138'
+0600    017F    0238        subwf ADC, W
+0601    0180    1C03        btfss STATUS, C
+0602    0181    2986        goto V6
+0603    0182    3004        movlw 0x4
+0604    0183    00AE        movwf waffles
+0605    0184    21DB        call case4
+0606    0185    295C        goto returnExec
+0607    0186            
+0608    0186            V6:
+0609    0186    3075        movlw D'117'
+0610    0187    0238        subwf ADC, W
+0611    0188    1C03        btfss STATUS, C
+0612    0189    298E        goto V7
+0613    018A    3005        movlw 0x5
+0614    018B    00AE        movwf waffles
+0615    018C    21E3        call case5
+0616    018D    295C        goto returnExec
+0617    018E            
+0618    018E            V7:
+0619    018E    3052        movlw D'82'
+0620    018F    0238        subwf ADC, W
+0621    0190    1C03        btfss STATUS, C
+0622    0191    2996        goto V8
+0623    0192    3006        movlw 0x6
+0624    0193    00AE        movwf waffles
+0625    0194    21EB        call case6
+0626    0195    295C        goto returnExec
+0627    0196            
+0628    0196            V8:
+0629    0196    3033        movlw D'51'
+0630    0197    0238        subwf ADC, W
+0631    0198    1C03        btfss STATUS, C
+0632    0199    299E        goto V9
+0633    019A    3007        movlw 0x7
+0634    019B    00AE        movwf waffles
+0635    019C    21F3        call case7
+0636    019D    295C        goto returnExec
+0637    019E            
+0638    019E            V9:
+0639    019E    301C        movlw D'28'
+0640    019F    0238        subwf ADC, W
+0641    01A0    1C03        btfss STATUS, C
+0642    01A1    29A6        goto V10
+0643    01A2    3008        movlw 0x8
+0644    01A3    00AE        movwf waffles
+0645    01A4    21FB        call case8
+0646    01A5    295C        goto returnExec
+0647    01A6            
+0648    01A6            V10:
+0649    01A6                ; movlw D'0'
+0650    01A6                ; subwf ADC, W
+0651    01A6                ; btfss STATUS, N
+0652    01A6                ; goto V10<--
+0653    01A6                ;btfsc STATUS, C
+0654    01A6    3009        movlw 0x9
+0655    01A7    00AE        movwf waffles
+0656    01A8    2203        call case9
+0657    01A9    295C        goto returnExec
+0658    01AA            
+0659    01AA            _PRESPERA:
+0660    01AA    30FF    	MOVLW 0XFF
+0661    01AB    00C0    	MOVWF CounterA
+0662    01AC    00BF    	MOVWF COUNTERb
+0663    01AD    00BE    	MOVWF COUNTERc	
+0664    01AE    21B0    	CALL ESPE
+0665    01AF    0008    	RETURN	
+0666    01B0            	
+0667    01B0            ESPE:
+0668    01B0    0BC0    	DECFSZ	CounterA,0X01
+0669    01B1    29B0    	GOTO	ESPE
+0670    01B2    21B4    	CALL	ESPE2
+0671    01B3    0008    	RETURN
+0672    01B4            ESPE2:
+0673    01B4    0BBF    	DECFSZ	COUNTERb,0X01
+0674    01B5    29B4    	GOTO	ESPE2
+0675    01B6    21B8    	CALL	ESPE3
+0676    01B7    0008    	RETURN
+0677    01B8            ESPE3:
+0678    01B8    0BBE    	DECFSZ	COUNTERc,0X01
+0679    01B9    29B8    	GOTO	ESPE3
+0680    01BA    0008    	RETURN	
+0681    01BB            
+0682    01BB            case0
+0683    01BB    1485        bsf PORTA, 1
+0684    01BC    1505        bsf PORTA, 2
+0685    01BD    1585        bsf PORTA, 3
+0686    01BE    1605        bsf PORTA, 4
+0687    01BF    1685        bsf PORTA, 5
+0688    01C0    1409        bsf PORTE, 0
+0689    01C1    1089        bcf PORTE, 1
+0690    01C2    0008        return 
+0691    01C3            case1
+0692    01C3                ;movlw 0x0
+0693    01C3    1085        bcf PORTA, 1
+0694    01C4    1205        bcf PORTA, 4
+0695    01C5    1285        bcf PORTA, 5
+0696    01C6    1009        bcf PORTE, 0
+0697    01C7    1089        bcf PORTE, 1
+0698    01C8                ;movlw 0x1
+0699    01C8    1505        bsf PORTA, 2
+0700    01C9    1585        bsf PORTA, 3
+0701    01CA    0008        return
+0702    01CB            case2
+0703    01CB                ;movlw 0x1
+0704    01CB    1485        bsf PORTA, 1
+0705    01CC    1505        bsf PORTA, 2
+0706    01CD    1605        bsf PORTA, 4
+0707    01CE    1685        bsf PORTA, 5
+0708    01CF    1489        bsf PORTE, 1
+0709    01D0                ;movlw 0x0
+0710    01D0    1185        bcf PORTA, 3
+0711    01D1    1009        bcf PORTE, 0
+0712    01D2    0008        return
+0713    01D3            case3
+0714    01D3                ;movlw 0x1
+0715    01D3    1485        bsf PORTA, 1
+0716    01D4    1505        bsf PORTA, 2
+0717    01D5    1585        bsf PORTA, 3
+0718    01D6    1605        bsf PORTA, 4
+0719    01D7    1489        bsf PORTE, 1
+0720    01D8                ;movlw 0x0
+0721    01D8    1009        bcf PORTE, 0
+0722    01D9    1285        bcf PORTA, 5
+0723    01DA    0008        return
+0724    01DB            case4
+0725    01DB                ;movlw 0x1
+0726    01DB    1505        bsf PORTA, 2
+0727    01DC    1585        bsf PORTA, 3
+0728    01DD    1409        bsf PORTE, 0
+0729    01DE    1489        bsf PORTE, 1
+0730    01DF                ;movlw 0x0
+0731    01DF    1085        bcf PORTA, 1
+0732    01E0    1205        bcf PORTA, 4
+0733    01E1    1285        bcf PORTA, 5
+0734    01E2    0008        return
+0735    01E3            case5
+0736    01E3                ;movlw 0x1
+0737    01E3    1585        bsf PORTA, 3
+0738    01E4    1605        bsf PORTA, 4
+0739    01E5    1409        bsf PORTE, 0
+0740    01E6    1489        bsf PORTE, 1
 0741    01E7    1485        bsf PORTA, 1
-0742    01E8    1505        bsf PORTA, 2
-0743    01E9    1585        bsf PORTA, 3
-0744    01EA                ;movlw 0x0
-0745    01EA    1205        bcf PORTA, 4
-0746    01EB    1285        bcf PORTA, 5
-0747    01EC    1009        bcf PORTE, 0
-0748    01ED    1089        bcf PORTE, 1
-0749    01EE    0008        return
-0750    01EF            case8
-0751    01EF                ;movlw 0x1
-0752    01EF    1485        bsf PORTA, 1
-0753    01F0    1505        bsf PORTA, 2
-0754    01F1    1585        bsf PORTA, 3
-0755    01F2    1605        bsf PORTA, 4
-0756    01F3    1685        bsf PORTA, 5
-0757    01F4    1409        bsf PORTE, 0
-0758    01F5    1489        bsf PORTE, 1
-0759    01F6    0008        return
-0760    01F7            case9
-0761    01F7                ;movlw 0x1
-0762    01F7    1485        bsf PORTA, 1
-0763    01F8    1505        bsf PORTA, 2
-0764    01F9    1585        bsf PORTA, 3
-0765    01FA    1605        bsf PORTA, 4
-0766    01FB    1409        bsf PORTE, 0
-0767    01FC    1489        bsf PORTE, 1
-0768    01FD                ;movlw 0x0
-0769    01FD    1285        bcf PORTA, 5
-0770    01FE    0008        return
-0771    01FF            ;-------------------------------------------------------------
-0772    01FF            				;SHOW VALUE OF PHOTOCELL
-0773    01FF            SHOWVARDISPLAY: ;show varphotocell on display
-0774    01FF    3000     	movlw 0x00
-0775    0200    0236        subwf VARDISPLAY, W
-0776    0201    1903        BTFSC STATUS, z
-0777    0202    2A28        goto  case0d
-0778    0203            
-0779    0203    3001     	movlw 0x01
-0780    0204    0236        subwf VARDISPLAY, W
-0781    0205    1903        BTFSC STATUS, z
-0782    0206    2A30        goto  case1d
-0783    0207            
-0784    0207    3002    	movlw 0x02
-0785    0208    0236        subwf VARDISPLAY, W
-0786    0209    1903        BTFSC STATUS, z
-0787    020A    2A38        goto  case2d
-0788    020B            
-0789    020B    3003     	movlw 0x03
-0790    020C    0236        subwf VARDISPLAY, W
-0791    020D    1903        BTFSC STATUS, z
-0792    020E    2A40        goto  case3d
-0793    020F            
-0794    020F    3004     	movlw 0x04
-0795    0210    0236        subwf VARDISPLAY, W
-0796    0211    1903        BTFSC STATUS, z
-0797    0212    2A48        goto  case4d
-0798    0213            
-0799    0213    3005    	movlw 0x05
-0800    0214    0236        subwf VARDISPLAY, W
-0801    0215    1903        BTFSC STATUS, z
-0802    0216    2A50        goto  case5d
-0803    0217            
-0804    0217    3006     	movlw 0x06
-0805    0218    0236        subwf VARDISPLAY, W
-0806    0219    1903        BTFSC STATUS, z
-0807    021A    2A58        goto  case6d
-0808    021B            
-0809    021B    3007     	movlw 0x07
-0810    021C    0236        subwf VARDISPLAY, W
-0811    021D    1903        BTFSC STATUS, z
-0812    021E    2A60        goto  case7d
-0813    021F            
-0814    021F    3008     	movlw 0x08
-0815    0220    0236        subwf VARDISPLAY, W
-0816    0221    1903        BTFSC STATUS, z
-0817    0222    2A68        goto  case8d
-0818    0223            
-0819    0223    3009     	movlw 0x09
-0820    0224    0236        subwf VARDISPLAY, W
-0821    0225    1903        BTFSC STATUS, z
-0822    0226    2A70        goto  case9d	
-0823    0227            endshow:
-0824    0227    0008    	RETURN
-0825    0228            
-0826    0228            case0d
-0827    0228    1485        bsf PORTA, 1
-0828    0229    1505        bsf PORTA, 2
-0829    022A    1585        bsf PORTA, 3
-0830    022B    1605        bsf PORTA, 4
-0831    022C    1685        bsf PORTA, 5
-0832    022D    1409        bsf PORTE, 0
-0833    022E    1089        bcf PORTE, 1
-0834    022F    2A27        goto	endshow
-0835    0230            case1d
-0836    0230                ;movlw 0x0
-0837    0230    1085        bcf PORTA, 1
-0838    0231    1205        bcf PORTA, 4
-0839    0232    1285        bcf PORTA, 5
-0840    0233    1009        bcf PORTE, 0
-0841    0234    1089        bcf PORTE, 1
-0842    0235                ;movlw 0x1
-0843    0235    1505        bsf PORTA, 2
-0844    0236    1585        bsf PORTA, 3
-0845    0237    2A27        goto	endshow
-0846    0238            case2d
-0847    0238                ;movlw 0x1
-0848    0238    1485        bsf PORTA, 1
-0849    0239    1505        bsf PORTA, 2
-0850    023A    1605        bsf PORTA, 4
-0851    023B    1685        bsf PORTA, 5
-0852    023C    1489        bsf PORTE, 1
-0853    023D                ;movlw 0x0
-0854    023D    1185        bcf PORTA, 3
-0855    023E    1009        bcf PORTE, 0
-0856    023F    2A27        goto	endshow
-0857    0240            case3d
-0858    0240                ;movlw 0x1
-0859    0240    1485        bsf PORTA, 1
-0860    0241    1505        bsf PORTA, 2
-0861    0242    1585        bsf PORTA, 3
-0862    0243    1605        bsf PORTA, 4
-0863    0244    1489        bsf PORTE, 1
-0864    0245                ;movlw 0x0
-0865    0245    1009        bcf PORTE, 0
-0866    0246    1285        bcf PORTA, 5
-0867    0247    2A27        goto	endshow
-0868    0248            case4d
-0869    0248                ;movlw 0x1
-0870    0248    1505        bsf PORTA, 2
-0871    0249    1585        bsf PORTA, 3
-0872    024A    1409        bsf PORTE, 0
-0873    024B    1489        bsf PORTE, 1
-0874    024C                ;movlw 0x0
-0875    024C    1085        bcf PORTA, 1
-0876    024D    1205        bcf PORTA, 4
-0877    024E    1285        bcf PORTA, 5
-0878    024F    2A27        goto	endshow
-0879    0250            case5d
-0880    0250                ;movlw 0x1
-0881    0250    1585        bsf PORTA, 3
-0882    0251    1605        bsf PORTA, 4
-0883    0252    1409        bsf PORTE, 0
-0884    0253    1489        bsf PORTE, 1
-0885    0254    1485        bsf PORTA, 1
-0886    0255                ;movlw 0x0
-0887    0255    1285        bcf PORTA, 5
-0888    0256    1105        bcf PORTA, 2
-0889    0257    2A27        goto	endshow
-0890    0258            case6d
-0891    0258                ;movlw 0x1
-0892    0258    1585        bsf PORTA, 3
-0893    0259    1605        bsf PORTA, 4
-0894    025A    1685        bsf PORTA, 5
-0895    025B    1409        bsf PORTE, 0
-0896    025C    1489        bsf PORTE, 1
-0897    025D    1485        bsf PORTA, 1
-0898    025E                ;movlw 0x0
-0899    025E    1105        bcf PORTA, 2
-0900    025F    2A27        goto	endshow
-0901    0260            case7d
-0902    0260                ;movlw 0x1
+0742    01E8                ;movlw 0x0
+0743    01E8    1285        bcf PORTA, 5
+0744    01E9    1105        bcf PORTA, 2
+0745    01EA    0008        return
+0746    01EB            case6
+0747    01EB                ;movlw 0x1
+0748    01EB    1585        bsf PORTA, 3
+0749    01EC    1605        bsf PORTA, 4
+0750    01ED    1685        bsf PORTA, 5
+0751    01EE    1409        bsf PORTE, 0
+0752    01EF    1489        bsf PORTE, 1
+0753    01F0    1485        bsf PORTA, 1
+0754    01F1                ;movlw 0x0
+0755    01F1    1105        bcf PORTA, 2
+0756    01F2    0008        return
+0757    01F3            case7
+0758    01F3                ;movlw 0x1
+0759    01F3    1485        bsf PORTA, 1
+0760    01F4    1505        bsf PORTA, 2
+0761    01F5    1585        bsf PORTA, 3
+0762    01F6                ;movlw 0x0
+0763    01F6    1205        bcf PORTA, 4
+0764    01F7    1285        bcf PORTA, 5
+0765    01F8    1009        bcf PORTE, 0
+0766    01F9    1089        bcf PORTE, 1
+0767    01FA    0008        return
+0768    01FB            case8
+0769    01FB                ;movlw 0x1
+0770    01FB    1485        bsf PORTA, 1
+0771    01FC    1505        bsf PORTA, 2
+0772    01FD    1585        bsf PORTA, 3
+0773    01FE    1605        bsf PORTA, 4
+0774    01FF    1685        bsf PORTA, 5
+0775    0200    1409        bsf PORTE, 0
+0776    0201    1489        bsf PORTE, 1
+0777    0202    0008        return
+0778    0203            case9
+0779    0203                ;movlw 0x1
+0780    0203    1485        bsf PORTA, 1
+0781    0204    1505        bsf PORTA, 2
+0782    0205    1585        bsf PORTA, 3
+0783    0206    1605        bsf PORTA, 4
+0784    0207    1409        bsf PORTE, 0
+0785    0208    1489        bsf PORTE, 1
+0786    0209                ;movlw 0x0
+0787    0209    1285        bcf PORTA, 5
+0788    020A    0008        return
+0789    020B            ;-------------------------------------------------------------
+0790    020B            				;SHOW VALUE OF PHOTOCELL
+0791    020B            SHOWVARDISPLAY: ;show varphotocell on display
+0792    020B    3000     	movlw 0x00
+0793    020C    0236        subwf VARDISPLAY, W
+0794    020D    1903        BTFSC STATUS, z
+0795    020E    2A34        goto  case0d
+0796    020F            
+0797    020F    3001     	movlw 0x01
+0798    0210    0236        subwf VARDISPLAY, W
+0799    0211    1903        BTFSC STATUS, z
+0800    0212    2A3C        goto  case1d
+0801    0213            
+0802    0213    3002    	movlw 0x02
+0803    0214    0236        subwf VARDISPLAY, W
+0804    0215    1903        BTFSC STATUS, z
+0805    0216    2A44        goto  case2d
+0806    0217            
+0807    0217    3003     	movlw 0x03
+0808    0218    0236        subwf VARDISPLAY, W
+0809    0219    1903        BTFSC STATUS, z
+0810    021A    2A4C        goto  case3d
+0811    021B            
+0812    021B    3004     	movlw 0x04
+0813    021C    0236        subwf VARDISPLAY, W
+0814    021D    1903        BTFSC STATUS, z
+0815    021E    2A54        goto  case4d
+0816    021F            
+0817    021F    3005    	movlw 0x05
+0818    0220    0236        subwf VARDISPLAY, W
+0819    0221    1903        BTFSC STATUS, z
+0820    0222    2A5C        goto  case5d
+0821    0223            
+0822    0223    3006     	movlw 0x06
+0823    0224    0236        subwf VARDISPLAY, W
+0824    0225    1903        BTFSC STATUS, z
+0825    0226    2A64        goto  case6d
+0826    0227            
+0827    0227    3007     	movlw 0x07
+0828    0228    0236        subwf VARDISPLAY, W
+0829    0229    1903        BTFSC STATUS, z
+0830    022A    2A6C        goto  case7d
+0831    022B            
+0832    022B    3008     	movlw 0x08
+0833    022C    0236        subwf VARDISPLAY, W
+0834    022D    1903        BTFSC STATUS, z
+0835    022E    2A74        goto  case8d
+0836    022F            
+0837    022F    3009     	movlw 0x09
+0838    0230    0236        subwf VARDISPLAY, W
+0839    0231    1903        BTFSC STATUS, z
+0840    0232    2A7C        goto  case9d	
+0841    0233            endshow:
+0842    0233    0008    	RETURN
+0843    0234            
+0844    0234            case0d
+0845    0234    1485        bsf PORTA, 1
+0846    0235    1505        bsf PORTA, 2
+0847    0236    1585        bsf PORTA, 3
+0848    0237    1605        bsf PORTA, 4
+0849    0238    1685        bsf PORTA, 5
+0850    0239    1409        bsf PORTE, 0
+0851    023A    1089        bcf PORTE, 1
+0852    023B    2A33        goto	endshow
+0853    023C            case1d
+0854    023C                ;movlw 0x0
+0855    023C    1085        bcf PORTA, 1
+0856    023D    1205        bcf PORTA, 4
+0857    023E    1285        bcf PORTA, 5
+0858    023F    1009        bcf PORTE, 0
+0859    0240    1089        bcf PORTE, 1
+0860    0241                ;movlw 0x1
+0861    0241    1505        bsf PORTA, 2
+0862    0242    1585        bsf PORTA, 3
+0863    0243    2A33        goto	endshow
+0864    0244            case2d
+0865    0244                ;movlw 0x1
+0866    0244    1485        bsf PORTA, 1
+0867    0245    1505        bsf PORTA, 2
+0868    0246    1605        bsf PORTA, 4
+0869    0247    1685        bsf PORTA, 5
+0870    0248    1489        bsf PORTE, 1
+0871    0249                ;movlw 0x0
+0872    0249    1185        bcf PORTA, 3
+0873    024A    1009        bcf PORTE, 0
+0874    024B    2A33        goto	endshow
+0875    024C            case3d
+0876    024C                ;movlw 0x1
+0877    024C    1485        bsf PORTA, 1
+0878    024D    1505        bsf PORTA, 2
+0879    024E    1585        bsf PORTA, 3
+0880    024F    1605        bsf PORTA, 4
+0881    0250    1489        bsf PORTE, 1
+0882    0251                ;movlw 0x0
+0883    0251    1009        bcf PORTE, 0
+0884    0252    1285        bcf PORTA, 5
+0885    0253    2A33        goto	endshow
+0886    0254            case4d
+0887    0254                ;movlw 0x1
+0888    0254    1505        bsf PORTA, 2
+0889    0255    1585        bsf PORTA, 3
+0890    0256    1409        bsf PORTE, 0
+0891    0257    1489        bsf PORTE, 1
+0892    0258                ;movlw 0x0
+0893    0258    1085        bcf PORTA, 1
+0894    0259    1205        bcf PORTA, 4
+0895    025A    1285        bcf PORTA, 5
+0896    025B    2A33        goto	endshow
+0897    025C            case5d
+0898    025C                ;movlw 0x1
+0899    025C    1585        bsf PORTA, 3
+0900    025D    1605        bsf PORTA, 4
+0901    025E    1409        bsf PORTE, 0
+0902    025F    1489        bsf PORTE, 1
 0903    0260    1485        bsf PORTA, 1
-0904    0261    1505        bsf PORTA, 2
-0905    0262    1585        bsf PORTA, 3
-0906    0263                ;movlw 0x0
-0907    0263    1205        bcf PORTA, 4
-0908    0264    1285        bcf PORTA, 5
-0909    0265    1009        bcf PORTE, 0
-0910    0266    1089        bcf PORTE, 1
-0911    0267    2A27        goto	endshow
-0912    0268            case8d
-0913    0268                ;movlw 0x1
-0914    0268    1485        bsf PORTA, 1
-0915    0269    1505        bsf PORTA, 2
-0916    026A    1585        bsf PORTA, 3
-0917    026B    1605        bsf PORTA, 4
-0918    026C    1685        bsf PORTA, 5
-0919    026D    1409        bsf PORTE, 0
-0920    026E    1489        bsf PORTE, 1
-0921    026F    2A27        goto	endshow
-0922    0270            case9d
-0923    0270                ;movlw 0x1
-0924    0270    1485        bsf PORTA, 1
-0925    0271    1505        bsf PORTA, 2
-0926    0272    1585        bsf PORTA, 3
-0927    0273    1605        bsf PORTA, 4
-0928    0274    1409        bsf PORTE, 0
-0929    0275    1489        bsf PORTE, 1
-0930    0276                ;movlw 0x0
-0931    0276    1285        bcf PORTA, 5
-0932    0277    2A27        goto	endshow
-0933    0278            
-0934    0278            END
+0904    0261                ;movlw 0x0
+0905    0261    1285        bcf PORTA, 5
+0906    0262    1105        bcf PORTA, 2
+0907    0263    2A33        goto	endshow
+0908    0264            case6d
+0909    0264                ;movlw 0x1
+0910    0264    1585        bsf PORTA, 3
+0911    0265    1605        bsf PORTA, 4
+0912    0266    1685        bsf PORTA, 5
+0913    0267    1409        bsf PORTE, 0
+0914    0268    1489        bsf PORTE, 1
+0915    0269    1485        bsf PORTA, 1
+0916    026A                ;movlw 0x0
+0917    026A    1105        bcf PORTA, 2
+0918    026B    2A33        goto	endshow
+0919    026C            case7d
+0920    026C                ;movlw 0x1
+0921    026C    1485        bsf PORTA, 1
+0922    026D    1505        bsf PORTA, 2
+0923    026E    1585        bsf PORTA, 3
+0924    026F                ;movlw 0x0
+0925    026F    1205        bcf PORTA, 4
+0926    0270    1285        bcf PORTA, 5
+0927    0271    1009        bcf PORTE, 0
+0928    0272    1089        bcf PORTE, 1
+0929    0273    2A33        goto	endshow
+0930    0274            case8d
+0931    0274                ;movlw 0x1
+0932    0274    1485        bsf PORTA, 1
+0933    0275    1505        bsf PORTA, 2
+0934    0276    1585        bsf PORTA, 3
+0935    0277    1605        bsf PORTA, 4
+0936    0278    1685        bsf PORTA, 5
+0937    0279    1409        bsf PORTE, 0
+0938    027A    1489        bsf PORTE, 1
+0939    027B    2A33        goto	endshow
+0940    027C            case9d
+0941    027C                ;movlw 0x1
+0942    027C    1485        bsf PORTA, 1
+0943    027D    1505        bsf PORTA, 2
+0944    027E    1585        bsf PORTA, 3
+0945    027F    1605        bsf PORTA, 4
+0946    0280    1409        bsf PORTE, 0
+0947    0281    1489        bsf PORTE, 1
+0948    0282                ;movlw 0x0
+0949    0282    1285        bcf PORTA, 5
+0950    0283    2A33        goto	endshow
+0951    0284            
+0952    0284            END
 ---------------------------------------------
 Number of errors = 0

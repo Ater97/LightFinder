@@ -112,12 +112,13 @@ WAIT:
     GOTO    WAIT
 ;--------------------------------------------------------------------
 						;BUTTON
-BUTTONLOOP:
+BUTTONShowGroupNumber:
 	MOVFW	GROUPNUMBER
 	MOVWF	VARDISPLAY
 	CALL	SHOWVARDISPLAY
-	
-	GOTO	BUTTONLOOP
+
+	call 	BigDelay 
+	GOTO	BUTTONShowGroupNumber
 
 
     call    RESTART      ;RETURN TO ORIGINAL POSITION & CLEAN EVERYTHING
@@ -354,7 +355,24 @@ Delay ; = 0.0001 seconds
 Delay_0
 	decfsz	p1, f
 	goto	Delay_0
+			;4 cycles (including call)
+	return
 
+BigDelay ; = 0.05 sconds
+			;249993 cycles
+	movlw	0x4E
+	movwf	p1
+	movlw	0xC4
+	movwf	p2
+Delay_1
+	decfsz	p1, f
+	goto	$+2
+	decfsz	p2, f
+	goto	Delay_1
+
+			;3 cycles
+	goto	$+1
+	nop
 			;4 cycles (including call)
 	return
 ;-------------------------------------------------------------------
