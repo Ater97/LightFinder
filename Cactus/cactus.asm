@@ -56,7 +56,7 @@ START
 	MOVLW 	0x20        ;NUMBER OF MOVES IN X
 	MOVWF 	LIMITX 
 	MOVWF	LIMITMAXX
-	MOVLW	0x10	    ;NUMBER OF STOPS IN X, 10h = 16d
+	MOVLW	0x08	    ;NUMBER OF STOPS IN X, 10h = 16d 360grads
 	MOVWF	LIMITBETA
 	MOVWF	LIMITMAXBETA
 	call 	CLEANY      ;SET COUNTERS TO 0
@@ -99,9 +99,11 @@ START
 MAIN:
     call    SEARCH      ;SEARCH BEST POINT
     call    MOVEGREATER ;GO TO BEST POINT
+	call	SHOWGREATER
 WAIT:   
     ;DO STUFF WITH THE BUTTON
     ;BTFSS	BUTTON
+	
     GOTO    WAIT
     call    RESTART      ;RETURN TO ORIGINAL POSITION & CLEAN EVERYTHING
     GOTO    MAIN
@@ -124,14 +126,18 @@ SEARCH:
 ;------------------------------------------------------------------
                         ;MOVE TO GREATER
 MOVEGREATER:
-	call	LOOPXMAX ; MOVE X 
+	call	LOOPYMAX ; MOVE Y
+	call	LOOPXMAXBETA ; MOVE X 
+	;call 	LOOPXMAX
+	return
+LOOPXMAXBETA:
+	call 	LOOPXMAX
 
 	INCF	COUNTBETA,1
 	MOVF	LIMITMAXBETA, W	
 	SUBWF	COUNTBETA, w
 	BTFSS	STATUS,Z
-	GOTO	MOVEGREATER
-    call	LOOPYMAX ; MOVE Y
+	GOTO	LOOPXMAXBETA
     call	CLEANBETA
     RETURN
 
@@ -151,16 +157,14 @@ LOOPMAXBETAREVERSE:
 	GOTO	LOOPMAXBETAREVERSE
     RETURN
 
-LOOPXMAX:
+LOOPXMAX:	
 	call 	EJEX
-
 	;MOVE ON X
-    INCF    COUNTX,1    
-	MOVF  	LIMITMAXX, w
+    INCF    COUNTX,1
+	MOVF  	LIMITX, w
 	SUBWF 	COUNTX,w
 	BTFSS 	STATUS,Z ;CHECK COUNT < limitx
 	GOTO 	LOOPXMAX	; JUMP IF COUNT !=  limitx
-	
 	call 	CLEANX
 	RETURN
 
@@ -266,13 +270,14 @@ LOOPBETAREVERSE:
 	SUBWF	COUNTBETA, w
 	BTFSS	STATUS,Z
 	GOTO	LOOPBETAREVERSE
+	call	CLEANBETA
 	RETURN
 
 LOOPX: ; LOOP i <= LIMITX
 	call 	EJEX
 
-	MOVFW 	COUNTX
-	MOVWF	TMPX
+	;MOVFW 	COUNTX
+	;MOVWF	TMPX
 
 	;MOVE ON X
     INCF    COUNTX,1
@@ -748,5 +753,167 @@ case9
     ;movlw 0x0
     bcf PORTA, 5
     return
+;-------------------------------------------------------------
+				;SHOW VALUE OF PHOTOCELL
+SHOWGREATER: ;show varphotocell on display
+ 	movlw 0x00
+    subwf varphotocell, W
+    BTFSC STATUS, z
+    goto  case0d
+
+ 	movlw 0x01
+    subwf varphotocell, W
+    BTFSC STATUS, z
+    goto  case1d
+
+	movlw 0x02
+    subwf varphotocell, W
+    BTFSC STATUS, z
+    goto  case2d
+
+ 	movlw 0x03
+    subwf varphotocell, W
+    BTFSC STATUS, z
+    goto  case3d
+
+ 	movlw 0x04
+    subwf varphotocell, W
+    BTFSC STATUS, z
+    goto  case4d
+
+	movlw 0x05
+    subwf varphotocell, W
+    BTFSC STATUS, z
+    goto  case5d
+
+ 	movlw 0x06
+    subwf varphotocell, W
+    BTFSC STATUS, z
+    goto  case6d
+
+ 	movlw 0x07
+    subwf varphotocell, W
+    BTFSC STATUS, z
+    goto  case7d
+
+ 	movlw 0x08
+    subwf varphotocell, W
+    BTFSC STATUS, z
+    goto  case8d
+
+ 	movlw 0x09
+    subwf varphotocell, W
+    BTFSC STATUS, z
+    goto  case9d	
+endshow:
+	RETURN
+
+case0d
+    bsf PORTA, 1
+    bsf PORTA, 2
+    bsf PORTA, 3
+    bsf PORTA, 4
+    bsf PORTA, 5
+    bsf PORTE, 0
+    bcf PORTE, 1
+    goto	endshow
+case1d
+    ;movlw 0x0
+    bcf PORTA, 1
+    bcf PORTA, 4
+    bcf PORTA, 5
+    bcf PORTE, 0
+    bcf PORTE, 1
+    ;movlw 0x1
+    bsf PORTA, 2
+    bsf PORTA, 3
+    goto	endshow
+case2d
+    ;movlw 0x1
+    bsf PORTA, 1
+    bsf PORTA, 2
+    bsf PORTA, 4
+    bsf PORTA, 5
+    bsf PORTE, 1
+    ;movlw 0x0
+    bcf PORTA, 3
+    bcf PORTE, 0
+    goto	endshow
+case3d
+    ;movlw 0x1
+    bsf PORTA, 1
+    bsf PORTA, 2
+    bsf PORTA, 3
+    bsf PORTA, 4
+    bsf PORTE, 1
+    ;movlw 0x0
+    bcf PORTE, 0
+    bcf PORTA, 5
+    goto	endshow
+case4d
+    ;movlw 0x1
+    bsf PORTA, 2
+    bsf PORTA, 3
+    bsf PORTE, 0
+    bsf PORTE, 1
+    ;movlw 0x0
+    bcf PORTA, 1
+    bcf PORTA, 4
+    bcf PORTA, 5
+    goto	endshow
+case5d
+    ;movlw 0x1
+    bsf PORTA, 3
+    bsf PORTA, 4
+    bsf PORTE, 0
+    bsf PORTE, 1
+    bsf PORTA, 1
+    ;movlw 0x0
+    bcf PORTA, 5
+    bcf PORTA, 2
+    goto	endshow
+case6d
+    ;movlw 0x1
+    bsf PORTA, 3
+    bsf PORTA, 4
+    bsf PORTA, 5
+    bsf PORTE, 0
+    bsf PORTE, 1
+    bsf PORTA, 1
+    ;movlw 0x0
+    bcf PORTA, 2
+    goto	endshow
+case7d
+    ;movlw 0x1
+    bsf PORTA, 1
+    bsf PORTA, 2
+    bsf PORTA, 3
+    ;movlw 0x0
+    bcf PORTA, 4
+    bcf PORTA, 5
+    bcf PORTE, 0
+    bcf PORTE, 1
+    goto	endshow
+case8d
+    ;movlw 0x1
+    bsf PORTA, 1
+    bsf PORTA, 2
+    bsf PORTA, 3
+    bsf PORTA, 4
+    bsf PORTA, 5
+    bsf PORTE, 0
+    bsf PORTE, 1
+    goto	endshow
+case9d
+    ;movlw 0x1
+    bsf PORTA, 1
+    bsf PORTA, 2
+    bsf PORTA, 3
+    bsf PORTA, 4
+    bsf PORTE, 0
+    bsf PORTE, 1
+    ;movlw 0x0
+    bcf PORTA, 5
+    goto	endshow
 
 END
