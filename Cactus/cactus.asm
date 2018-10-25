@@ -59,10 +59,13 @@ START
 	MOVLW	0x08	    ;NUMBER OF STOPS IN X, 10h = 16d 360grads
 	MOVWF	LIMITBETA
 	MOVWF	LIMITMAXBETA
+	MOVLW	0x06
+	MOVWF	GROUPNUMBER
 	call 	CLEANY      ;SET COUNTERS TO 0
 	call 	CLEANX
 	call 	CLEANBETA
 	call 	CLEANVARPHOTOCELL
+
 ;------------------------------------------------------------------------------
                 ;CONFIGURATION FOR THE PHOTOCELL 
 	bcf STATUS,RP0 ;Ir banco 0
@@ -99,12 +102,24 @@ START
 MAIN:
     call    SEARCH      ;SEARCH BEST POINT
     call    MOVEGREATER ;GO TO BEST POINT
-	call	SHOWGREATER
+	MOVFW	VARPHOTOCELL
+	MOVWF	VARDISPLAY
+	call	SHOWVARDISPLAY
 WAIT:   
     ;DO STUFF WITH THE BUTTON
-    ;BTFSS	BUTTON
-	
+
+    BTFSS	PORTE,2
     GOTO    WAIT
+;--------------------------------------------------------------------
+						;BUTTON
+BUTTONLOOP:
+	MOVFW	GROUPNUMBER
+	MOVWF	VARDISPLAY
+	CALL	SHOWVARDISPLAY
+	
+	GOTO	BUTTONLOOP
+
+
     call    RESTART      ;RETURN TO ORIGINAL POSITION & CLEAN EVERYTHING
     GOTO    MAIN
     GOTO    END
@@ -146,7 +161,7 @@ RESTART:
     call 	LOOPYREVERSEMAX
 	call 	CLEANVARPHOTOCELL
     RETURN
-
+VAR
 LOOPMAXBETAREVERSE:
 	call 	LOOPXREVERSEMAX
 	
@@ -210,7 +225,7 @@ LOOPXREVERSEMAX:
 	;negative     0     0
 COMPARE: ;ASIGNAR A TMPCELL EL NUMERO EN LA ESCALA DE LUZ (0-9)
     MOVWF   Waffles
-    SUBWF   VARPHOTOCELL, W ; W = VARPHOTOVELL - TMPCELL 
+    SUBWF   VARPHOTOCELL, W ; W = VARPHOTOCELL - TMPCELL 
     BTFSS   STATUS, C   ;IF VARPHOTOCELL < TMPCELL ; c=0 if negative
     call    CHANGEPHOTOCELL   
 	;goto 	DimeElGordito 
@@ -755,54 +770,54 @@ case9
     return
 ;-------------------------------------------------------------
 				;SHOW VALUE OF PHOTOCELL
-SHOWGREATER: ;show varphotocell on display
+SHOWVARDISPLAY: ;show varphotocell on display
  	movlw 0x00
-    subwf varphotocell, W
+    subwf VARDISPLAY, W
     BTFSC STATUS, z
     goto  case0d
 
  	movlw 0x01
-    subwf varphotocell, W
+    subwf VARDISPLAY, W
     BTFSC STATUS, z
     goto  case1d
 
 	movlw 0x02
-    subwf varphotocell, W
+    subwf VARDISPLAY, W
     BTFSC STATUS, z
     goto  case2d
 
  	movlw 0x03
-    subwf varphotocell, W
+    subwf VARDISPLAY, W
     BTFSC STATUS, z
     goto  case3d
 
  	movlw 0x04
-    subwf varphotocell, W
+    subwf VARDISPLAY, W
     BTFSC STATUS, z
     goto  case4d
 
 	movlw 0x05
-    subwf varphotocell, W
+    subwf VARDISPLAY, W
     BTFSC STATUS, z
     goto  case5d
 
  	movlw 0x06
-    subwf varphotocell, W
+    subwf VARDISPLAY, W
     BTFSC STATUS, z
     goto  case6d
 
  	movlw 0x07
-    subwf varphotocell, W
+    subwf VARDISPLAY, W
     BTFSC STATUS, z
     goto  case7d
 
  	movlw 0x08
-    subwf varphotocell, W
+    subwf VARDISPLAY, W
     BTFSC STATUS, z
     goto  case8d
 
  	movlw 0x09
-    subwf varphotocell, W
+    subwf VARDISPLAY, W
     BTFSC STATUS, z
     goto  case9d	
 endshow:
