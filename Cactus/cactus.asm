@@ -32,6 +32,7 @@ GROUPNUMBER	EQU 0x3C
 CounterC EQU 0x3E
 CounterB EQU 0x3F
 CounterA EQU 0x40
+
 INICIO
 
 	ORG		0x00
@@ -43,7 +44,9 @@ START
 	BSF 	STATUS, 5; COLOCAMOS EN S EL BIT 5 DE REG. ESTATUS
 	CLRF	TRISB
 	CLRF	TRISD   
-	                    ;BIT CLEARE FILE
+	bsf	TRISD, 7
+	bsf	TRISD, 6
+                    ;BIT CLEARE FILE
 	BCF		STATUS, RP0 ;TODOS LOS PINES DE B SON SALIDAS
 
 	MOVLW	0x00
@@ -59,12 +62,13 @@ START
 	MOVLW	0x08	    ;NUMBER OF STOPS IN X, 10h = 16d 360grads
 	MOVWF	LIMITBETA
 	MOVWF	LIMITMAXBETA
-	MOVLW	0x06
+	MOVLW	0x06			
 	MOVWF	GROUPNUMBER
 	call 	CLEANY      ;SET COUNTERS TO 0
 	call 	CLEANX
 	call 	CLEANBETA
 	call 	CLEANVARPHOTOCELL
+
 
 ;------------------------------------------------------------------------------
                 ;CONFIGURATION FOR THE PHOTOCELL 
@@ -87,9 +91,9 @@ START
 	bsf TRISA,0 ;RA0 linea de entrada para el ADC
     	;Port A: display output
     	bcf	TRISA, 1
-   	bcf	TRISA, 2
+   		bcf	TRISA, 2
     	bcf	TRISA, 3
-   	bcf	TRISA, 4
+   		bcf	TRISA, 4
     	bcf	TRISA, 5
     	bcf	TRISE, 0
     	bcf	TRISE, 1
@@ -98,6 +102,10 @@ START
 	bcf STATUS,RP1
 ;--------------------------------------------------------------------
 ;--------------------------------------------------------------------
+WAITStart:
+
+    BTFSS	PORTE,2
+    GOTO    WAITStart
 						;MAIN
 MAIN:
     call    SEARCH      ;SEARCH BEST POINT
@@ -106,12 +114,11 @@ MAIN:
 	MOVWF	VARDISPLAY
 	call	SHOWVARDISPLAY
 WAIT:   
-    ;DO STUFF WITH THE BUTTON
-
     BTFSS	PORTE,2
     GOTO    WAIT
-;--------------------------------------------------------------------
-						;BUTTON
+
+;poner lo de la comunicacion	
+
 BUTTONShowGroupNumber:
 	MOVFW	GROUPNUMBER
 	MOVWF	VARDISPLAY
@@ -122,8 +129,11 @@ BUTTONShowGroupNumber:
 
 
     call    RESTART      ;RETURN TO ORIGINAL POSITION & CLEAN EVERYTHING
-    GOTO    MAIN
+    GOTO    WAITStart
     GOTO    END
+
+;-----------------------------------------------------------------------
+;------------------------------------------------------------------------	
 SEARCH:
 	call	LOOPX ; MOVE X AND Y
 
@@ -162,7 +172,7 @@ RESTART:
     call 	LOOPYREVERSEMAX
 	call 	CLEANVARPHOTOCELL
     RETURN
-VAR
+
 LOOPMAXBETAREVERSE:
 	call 	LOOPXREVERSEMAX
 	

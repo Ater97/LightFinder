@@ -1,0 +1,359 @@
+---------------------------------------------
+PIC ASSEMBLER LISTING
+Line    Address Opcode  Instruction
+---------------------------------------------
+0001    0000            DATO 	EQU 0X21
+0002    0000            CONR	EQU 0X22
+0003    0000            CONE	EQU 0X23
+0004    0000            MAYG	EQU 0X24 ; grupo mayor
+0005    0000            MAYV	EQU 0X25 ; valor grupo mayor
+0006    0000            MENG	EQU 0X26 ; grupo menor
+0007    0000            MENV	EQU 0X27 ; valor grupo menor
+0008    0000            ;**********valores de backup
+0009    0000            MAYBG	EQU 0X28 ; grupo mayor backup
+0010    0000            MAYBV	EQU 0X29 ; valor grupo mayor backup
+0011    0000            MENBG	EQU 0X30 ; grupo menor backup
+0012    0000            MENBV	EQU 0X31 ; valor grupo menor backup
+0013    0000            ;****************************
+0014    0000            d1	EQU 0X32
+0015    0000            d2	EQU 0X33
+0016    0000            d3	EQU 0X34
+0017    0000            
+0018    0000            
+0019    0000            
+0020    0000            INICIO
+0021    0000    151F    	BSF ADCON0, GO_DONE
+0022    0001            	ORG 0X00 
+0023    0000    2801    	GOTO START
+0024    0001            	
+0025    0001            START
+0026    0001            	; siempre debemos modificar el registro status antes de utilizar los puertos
+0027    0001    1683    	BSF	STATUS, 5 
+0028    0002    1406    	BSF	TRISB, 0 ; env�a datos
+0029    0003    1086    	BCF	TRISB, 1
+0030    0004    1106    	BCF	TRISB, 2
+0031    0005    1186    	BCF	TRISB, 3
+0032    0006    1206    	BCF	TRISB, 4
+0033    0007    1407    	BSF	TRISC, 0 ; BIT 0 recibir
+0034    0008    1487    	BSF	TRISC, 1 ; BIT 1 recibir
+0035    0009    1507    	BSF	TRISC, 2 ; BIT 2 recibir
+0036    000A    1587    	BSF	TRISC, 3 ; BIT 3 recibir
+0037    000B    1408    	BSF	TRISD, 0 ; identifica que tiene que recibir datos
+0038    000C    1283    	BCF 	STATUS, RP0
+0039    000D    3000    	MOVLW	B'00000000'
+0040    000E    0086    	MOVWF	PORTB
+0041    000F    300E    	MOVLW	B'00001110'
+0042    0010    0087    	MOVWF	PORTC 	
+0043    0011    3001    	MOVLW   B'00000001'
+0044    0012    00A3    	MOVWF	CONE
+0045    0013    00A2    	MOVWF	CONR
+0046    0014    3008    	MOVLW   B'00001000'	
+0047    0015    00A4    	MOVWF	MAYG
+0048    0016    3009    	MOVLW	B'00001001'
+0049    0017    00A5    	MOVWF	MAYV
+0050    0018    3008    	MOVLW	B'00001000'
+0051    0019    00A6    	MOVWF	MENG
+0052    001A    3009    	MOVLW	B'00001001'
+0053    001B    00A7    	MOVWF	MENV
+0054    001C    3000    	MOVLW	B'00000000'
+0055    001D    00A8    	MOVWF	MAYBG
+0056    001E    3000    	MOVLW	B'00000000'
+0057    001F    00B0    	MOVWF	MENBG
+0058    0020    3000    	MOVLW	B'00000000'
+0059    0021    00A9    	MOVWF	MAYBV
+0060    0022    3000    	MOVLW	B'00000000'
+0061    0023    00A9    	MOVWF	MAYBV
+0062    0024            		
+0063    0024            MENU
+0064    0024    20ED    	CALL	DELAY_D
+0065    0025    1806    	BTFSC   PORTB, 0 ; si el bit de enviar enta encendido va a enviar datos
+0066    0026    202B    	CALL	ENVIARDEC
+0067    0027    20ED    	CALL	DELAY_D
+0068    0028    1808    	BTFSC	PORTD, 0
+0069    0029    207B    	CALL	RECIBIRDEC
+0070    002A    2824    	GOTO	MENU
+0071    002B            
+0072    002B            ENVIARDEC ; Decide que enviar encicladamente
+0073    002B    20ED    	CALL	DELAY_D
+0074    002C    3001    	MOVLW	B'00000001'
+0075    002D    0223    	SUBWF	CONE, 0
+0076    002E    1903    	BTFSC	STATUS, Z
+0077    002F    2063    	CALL	ENVIARGM ; enviar grupo mayor
+0078    0030    20ED    	CALL	DELAY_D
+0079    0031    3002    	MOVLW	B'00000010'
+0080    0032    0223    	SUBWF	CONE, 0
+0081    0033    1903    	BTFSC	STATUS, Z
+0082    0034    2069    	CALL	ENVIARVM ; enviar valor mayor
+0083    0035    20ED    	CALL	DELAY_D
+0084    0036    3003    	MOVLW	B'00000011'
+0085    0037    0223    	SUBWF	CONE, 0
+0086    0038    1903    	BTFSC	STATUS, Z
+0087    0039    206F    	CALL	ENVIARGMM ; enviar grupo menor
+0088    003A    20ED    	CALL	DELAY_D
+0089    003B    3004    	MOVLW	B'00000100'
+0090    003C    0223    	SUBWF	CONE, 0
+0091    003D    1903    	BTFSC	STATUS, Z
+0092    003E    2075    	CALL	ENVIARVMM ; enviar valor menor
+0093    003F    20ED    	CALL	DELAY_D
+0094    0040    3005    	MOVLW	B'00000101'
+0095    0041    0223    	SUBWF	CONE, 0
+0096    0042    1903    	BTFSC	STATUS, Z
+0097    0043    209D    	CALL	FINENV; hacer comparacion	
+0098    0044    0AA3    	INCF	CONE, 1	
+0099    0045    0008    	RETURN
+0100    0046            
+0101    0046            SETBITS
+0102    0046    1821    	BTFSC	DATO, 0
+0103    0047    2853    	GOTO	SET11
+0104    0048    2855    	GOTO	SET10
+0105    0049            SETBITS1
+0106    0049    18A1    	BTFSC	DATO, 1
+0107    004A    2857    	GOTO	SET21
+0108    004B    2859    	GOTO	SET20
+0109    004C            SETBITS2
+0110    004C    1921    	BTFSC	DATO, 2
+0111    004D    285B    	GOTO	SET31
+0112    004E    285D    	GOTO	SET30
+0113    004F            SETBITS3
+0114    004F    19A1    	BTFSC	DATO, 3
+0115    0050    285F    	GOTO	SET41
+0116    0051    2861    	GOTO	SET40
+0117    0052            ENDSET
+0118    0052    0008    	RETURN	
+0119    0053            
+0120    0053            SET11
+0121    0053    1486    	BSF	PORTB, 1
+0122    0054    2849    	GOTO	SETBITS1
+0123    0055            SET10
+0124    0055    1086    	BCF	PORTB, 1
+0125    0056    2849    	GOTO	SETBITS1
+0126    0057            	
+0127    0057            SET21
+0128    0057    1506    	BSF	PORTB, 2
+0129    0058    284C    	GOTO	SETBITS2
+0130    0059            SET20
+0131    0059    1106    	BCF	PORTB, 2
+0132    005A    284C    	GOTO	SETBITS2
+0133    005B            	
+0134    005B            SET31
+0135    005B    1586    	BSF	PORTB, 3
+0136    005C    284F    	GOTO	SETBITS3
+0137    005D            SET30
+0138    005D    1186    	BCF	PORTB, 3
+0139    005E    284F    	GOTO	SETBITS3
+0140    005F            	
+0141    005F            SET41
+0142    005F    1606    	BSF	PORTB, 4
+0143    0060    2852    	GOTO	ENDSET
+0144    0061            SET40
+0145    0061    1206    	BCF	PORTB, 4
+0146    0062    2852    	GOTO	ENDSET
+0147    0063            	
+0148    0063            ENVIARGM
+0149    0063    0824    	MOVF	MAYG, W
+0150    0064    00A1    	MOVWF 	DATO
+0151    0065    2046    	CALL	SETBITS
+0152    0066    1806    	BTFSC	PORTB, 0
+0153    0067    2863    	GOTO	ENVIARGM 
+0154    0068    0008    	RETURN
+0155    0069            	
+0156    0069            ENVIARVM
+0157    0069    0825    	MOVF	MAYV, W
+0158    006A    00A1    	MOVWF 	DATO
+0159    006B    2046    	CALL	SETBITS	
+0160    006C    1806    	BTFSC	PORTB, 0
+0161    006D    2869    	GOTO	ENVIARVM 
+0162    006E    0008    	RETURN
+0163    006F            	
+0164    006F            ENVIARGMM
+0165    006F    0826    	MOVF	MENG, W
+0166    0070    00A1    	MOVWF 	DATO
+0167    0071    2046    	CALL	SETBITS	
+0168    0072    1806    	BTFSC	PORTB, 0
+0169    0073    286F    	GOTO	ENVIARGMM 
+0170    0074    0008    	RETURN
+0171    0075            	
+0172    0075            ENVIARVMM
+0173    0075    0827    	MOVF	MENV, W
+0174    0076    00A1    	MOVWF 	DATO
+0175    0077    2046    	CALL	SETBITS	
+0176    0078    1806    	BTFSC	PORTB, 0
+0177    0079    2875    	GOTO	ENVIARVMM 
+0178    007A    0008    	RETURN
+0179    007B            
+0180    007B            RECIBIRDEC ; recibe encicladamente
+0181    007B    20ED    	CALL	DELAY_D
+0182    007C    3001    	MOVLW	B'00000001'
+0183    007D    0222    	SUBWF	CONR, 0
+0184    007E    1903    	BTFSC	STATUS, Z
+0185    007F    20BF    	CALL	RECIBIRGM ; enviar grupo mayor
+0186    0080    20ED    	CALL	DELAY_D
+0187    0081    3002    	MOVLW	B'00000010'
+0188    0082    0222    	SUBWF	CONR, 0
+0189    0083    1903    	BTFSC	STATUS, Z
+0190    0084    20C5    	CALL	RECIBIRVM ; enviar valor mayor
+0191    0085    20ED    	CALL	DELAY_D
+0192    0086    3003    	MOVLW	B'00000011'
+0193    0087    0222    	SUBWF	CONR, 0
+0194    0088    1903    	BTFSC	STATUS, Z
+0195    0089    20CB    	CALL	RECIBIRGMM ; enviar grupo menor
+0196    008A    20ED    	CALL	DELAY_D
+0197    008B    3004    	MOVLW	B'00000100'
+0198    008C    0222    	SUBWF	CONR, 0
+0199    008D    1903    	BTFSC	STATUS, Z
+0200    008E    20D1    	CALL	RECIBIRVMM ; enviar valor menor	
+0201    008F    20ED    	CALL	DELAY_D
+0202    0090    3005    	MOVLW	B'00000101'
+0203    0091    0222    	SUBWF	CONR, 0
+0204    0092    1903    	BTFSC	STATUS, Z
+0205    0093    2096    	CALL	FINREC; hacer comparacion	
+0206    0094    0AA2    	INCF	CONR, 1			
+0207    0095    0008    	RETURN
+0208    0096            	
+0209    0096            FINREC
+0210    0096    3000    	MOVLW	B'00000000'
+0211    0097    00A2    	MOVWF   CONR
+0212    0098    20D7    	CALL	COMPAREMAYORG
+0213    0099    20E2    	CALL	COMPAREMENORG
+0214    009A    1808    	BTFSC	PORTD, 0
+0215    009B    2896    	GOTO	FINREC 
+0216    009C    0008    	RETURN
+0217    009D            	
+0218    009D            FINENV
+0219    009D    3000    	MOVLW	B'00000000'
+0220    009E    00A3    	MOVWF   CONE
+0221    009F    1806    	BTFSC	PORTB, 0
+0222    00A0    289D    	GOTO	FINENV
+0223    00A1    0008    	RETURN
+0224    00A2            	
+0225    00A2            SET11R
+0226    00A2    1421    	BSF	DATO, 0
+0227    00A3    28B5    	GOTO	SETBITS1R
+0228    00A4            SET10R
+0229    00A4    1021    	BCF	DATO, 0
+0230    00A5    28B5    	GOTO	SETBITS1R
+0231    00A6            	
+0232    00A6            SET21R
+0233    00A6    14A1    	BSF	DATO, 1
+0234    00A7    28B8    	GOTO	SETBITS2R
+0235    00A8            SET20R
+0236    00A8    10A1    	BCF	DATO, 1
+0237    00A9    28B8    	GOTO	SETBITS2R
+0238    00AA            	
+0239    00AA            SET31R
+0240    00AA    1521    	BSF	DATO, 2
+0241    00AB    28BB    	GOTO	SETBITS3R
+0242    00AC            SET30R
+0243    00AC    1121    	BCF	DATO, 2
+0244    00AD    28BB    	GOTO	SETBITS3R
+0245    00AE            	
+0246    00AE            SET41R
+0247    00AE    15A1    	BSF	DATO, 3
+0248    00AF    28BE    	GOTO	ENDSETR
+0249    00B0            SET40R
+0250    00B0    11A1    	BCF	DATO, 3
+0251    00B1    28BE    	GOTO	ENDSETR
+0252    00B2            
+0253    00B2            SETBITSR
+0254    00B2    1987    	BTFSC	PORTC, 3
+0255    00B3    28A2    	GOTO	SET11R
+0256    00B4    28A4    	GOTO	SET10R
+0257    00B5            SETBITS1R
+0258    00B5    1907    	BTFSC	PORTC, 2
+0259    00B6    28A6    	GOTO	SET21R
+0260    00B7    28A8    	GOTO	SET20R
+0261    00B8            SETBITS2R
+0262    00B8    1887    	BTFSC	PORTC, 1
+0263    00B9    28AA    	GOTO	SET31R
+0264    00BA    28AC    	GOTO	SET30R
+0265    00BB            SETBITS3R
+0266    00BB    1807    	BTFSC	PORTC, 0
+0267    00BC    28AE    	GOTO	SET41R
+0268    00BD    28B0    	GOTO	SET40R
+0269    00BE            ENDSETR
+0270    00BE    0008    	RETURN	
+0271    00BF            
+0272    00BF            	
+0273    00BF            RECIBIRGM
+0274    00BF    20B2    	CALL	SETBITSR
+0275    00C0    0821    	MOVF	DATO, W
+0276    00C1    00A8    	MOVWF	MAYBG
+0277    00C2    1808    	BTFSC	PORTD, 0
+0278    00C3    28BF    	GOTO	RECIBIRGM 
+0279    00C4    0008    	RETURN	
+0280    00C5            	
+0281    00C5            RECIBIRVM
+0282    00C5    20B2    	CALL	SETBITSR
+0283    00C6    0821    	MOVF	DATO, W
+0284    00C7    00A9    	MOVWF	MAYBV
+0285    00C8    1808    	BTFSC	PORTD, 0
+0286    00C9    28C5    	GOTO	RECIBIRVM 
+0287    00CA    0008    	RETURN
+0288    00CB            
+0289    00CB            RECIBIRGMM
+0290    00CB    20B2    	CALL	SETBITSR
+0291    00CC    0821    	MOVF	DATO, W
+0292    00CD    00B0    	MOVWF	MENBG
+0293    00CE    1808    	BTFSC	PORTD, 0
+0294    00CF    28CB    	GOTO	RECIBIRGMM 
+0295    00D0    0008    	RETURN	
+0296    00D1            
+0297    00D1            RECIBIRVMM
+0298    00D1    20B2    	CALL	SETBITSR
+0299    00D2    0821    	MOVF	DATO, W
+0300    00D3    00B1    	MOVWF	MENBV
+0301    00D4    1808    	BTFSC	PORTD, 0
+0302    00D5    28D1    	GOTO	RECIBIRVMM 
+0303    00D6    0008    	RETURN
+0304    00D7            
+0305    00D7            COMPAREMAYORG 
+0306    00D7    0825    	MOVF  MAYV, W
+0307    00D8    0229    	SUBWF MAYBV, W
+0308    00D9    1C03    	BTFSS STATUS, C       
+0309    00DA    28E1    	GOTO  NOCHANGEMAY
+0310    00DB    28DC    	GOTO  CHANGEMAY	                        
+0311    00DC            
+0312    00DC            CHANGEMAY
+0313    00DC    0828    	MOVF  MAYBG, W 
+0314    00DD    00A4            MOVWF MAYG
+0315    00DE    0829            MOVF  MAYBV, W
+0316    00DF    00A5            MOVWF MAYV
+0317    00E0    0008    	RETURN
+0318    00E1            
+0319    00E1            NOCHANGEMAY
+0320    00E1    0008    	RETURN
+0321    00E2            	
+0322    00E2            COMPAREMENORG 
+0323    00E2    0827    	MOVF  MENV, W
+0324    00E3    0231    	SUBWF MENBV, W
+0325    00E4    1C03    	BTFSS STATUS, C  
+0326    00E5    28E7    	GOTO  CHANGEMEN     
+0327    00E6    28EC    	GOTO  NOCHANGEMEN	                        
+0328    00E7            
+0329    00E7            CHANGEMEN
+0330    00E7    0830    	MOVF  MENBG, W 
+0331    00E8    00A6            MOVWF MENG
+0332    00E9    0831            MOVF  MENBV, W
+0333    00EA    00A7            MOVWF MENV
+0334    00EB    0008    	RETURN
+0335    00EC            
+0336    00EC            NOCHANGEMEN
+0337    00EC    0008    	RETURN
+0338    00ED            	
+0339    00ED            	
+0340    00ED            DELAY_D
+0341    00ED    3087    	movlw	0x87
+0342    00EE    00B2    	movwf	d1
+0343    00EF    3014    	movlw	0x14
+0344    00F0    00B3    	movwf	d2
+0345    00F1            DELAY_D_0
+0346    00F1    0BB2    	decfsz	d1, f
+0347    00F2    28F4    	goto	$+2
+0348    00F3    0BB3    	decfsz	d2, f
+0349    00F4    28F1    	goto	DELAY_D_0
+0350    00F5            
+0351    00F5            			;2 cycles
+0352    00F5    28F6    	goto	$+1
+0353    00F6    0008    	RETURN
+---------------------------------------------
+Number of errors = 0
