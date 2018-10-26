@@ -32,6 +32,24 @@ GROUPNUMBER	EQU 0x3C
 CounterC EQU 0x3E
 CounterB EQU 0x3F
 CounterA EQU 0x40
+;-----------------------------------------
+;DATO 	EQU 0X41
+CONR	EQU 0X42
+CONE	EQU 0X43
+MAYG	EQU 0X44 ; grupo mayor
+MAYV	EQU 0X45 ; valor grupo mayor
+MENG	EQU 0X46 ; grupo menor
+MENV	EQU 0X47 ; valor grupo menor
+;**********valores de backup
+MAYBG	EQU 0X48 ; grupo mayor backup
+MAYBV	EQU 0X49 ; valor grupo mayor backup
+MENBG	EQU 0X4A ; grupo menor backup
+MENBV	EQU 0X4B ; valor grupo menor backup
+;****************************
+d1	EQU 0X4C
+d2	EQU 0X4D
+d3	EQU 0X4E
+
 
 INICIO
 
@@ -69,6 +87,27 @@ START
 	call 	CLEANBETA
 	call 	CLEANVARPHOTOCELL
 
+	BSF	STATUS, 5 
+	;BSF	TRISB, 0 ; env�a datos
+	BSF	TRISD,6 ;************************
+	;BCF	TRISB, 1
+	;BCF	TRISB, 2
+	;BCF	TRISB, 3
+	;BCF	TRISB, 4
+	BCF	TRISC, 4 ;************************
+	BCF	TRISC, 5 ;************************
+	BCF	TRISC, 6 ;************************
+	BCF	TRISC, 7 ;************************
+
+	BSF	TRISC, 0 ; BIT 0 recibir
+	BSF	TRISC, 1 ; BIT 1 recibir
+	BSF	TRISC, 2 ; BIT 2 recibir
+	BSF	TRISC, 3 ; BIT 3 recibir
+	BSF	TRISD, 0 ; identifica que tiene que recibir datos
+	MOVLW   B'00000001'
+	MOVWF	CONE
+	MOVWF	CONR
+
 
 ;------------------------------------------------------------------------------
                 ;CONFIGURATION FOR THE PHOTOCELL 
@@ -102,22 +141,65 @@ START
 	bcf STATUS,RP1
 ;--------------------------------------------------------------------
 ;--------------------------------------------------------------------
+								;MAIN
 WAITStart:
 
     BTFSS	PORTE,2
     GOTO    WAITStart
-						;MAIN
+						
 MAIN:
     call    SEARCH      ;SEARCH BEST POINT
     call    MOVEGREATER ;GO TO BEST POINT
+SHOWMAX:
 	MOVFW	VARPHOTOCELL
 	MOVWF	VARDISPLAY
 	call	SHOWVARDISPLAY
 WAIT:   
     BTFSS	PORTE,2
     GOTO    WAIT
+;-------------------
+		;cOMUNICACION
+	MOVFW   GROUPNUMBER	
+	MOVWF	MAYG
+	MOVFW	VARPHOTOCELL
+	MOVWF	MAYV
+	MOVFW   GROUPNUMBER	
+	MOVWF	MENG
+	MOVFW	VARPHOTOCELL
+	MOVWF	MENV	
+;EQUIVALENCIAS DE PUERTOS
+		;B1 = C4
+		;B2 = C5
+		;B3 = C6
+		;B4 = C7
+		;B0 = D6
+COMUNICACION:
+	CALL	DELAY_D
+	;BTFSC   PORTB, 0 ; si el bit de enviar enta encendido va a enviar datos
+	BTFSC   PORTD, 6;*************************
+	CALL	ENVIARDEC
+	CALL	DELAY_D
+	BTFSC	PORTD, 0
+	CALL	RECIBIRDEC
 
-;poner lo de la comunicacion	
+	btfss 	PORTE,2
+	GOTO	COMUNICACION
+;-----------------------
+SHOWMAXGROUP:
+	MOVFW	MAYG
+	MOVWF	VARDISPLAY
+	CALL	SHOWVARDISPLAY
+	BTFSS	PORTE,2
+	GOTO 	SHOWMAXGROUP
+
+
+SHOWMINGROUP:
+	MOVFW	MENG
+	MOVWF	VARDISPLAY
+	CALL	SHOWVARDISPLAY	
+	call 	BigDelay 
+	BTFSS	PORTE,2
+	GOTO 	SHOWMINGROUP
 
 BUTTONShowGroupNumber:
 	MOVFW	GROUPNUMBER
@@ -125,8 +207,9 @@ BUTTONShowGroupNumber:
 	CALL	SHOWVARDISPLAY
 
 	call 	BigDelay 
+	BTFSS	PORTE,2
 	GOTO	BUTTONShowGroupNumber
-
+	GOTO 	SHOWMAX
 
     call    RESTART      ;RETURN TO ORIGINAL POSITION & CLEAN EVERYTHING
     GOTO    WAITStart
@@ -385,6 +468,21 @@ Delay_1
 	nop
 			;4 cycles (including call)
 	return
+
+DELAY_D
+	movlw	0x87
+	movwf	d1
+	movlw	0x14
+	movwf	d2
+DELAY_D_0
+	decfsz	d1, f
+	goto	$+2
+	decfsz	d2, f
+	goto	DELAY_D_0
+
+			;2 cycles
+	goto	$+1
+	RETURN
 ;-------------------------------------------------------------------
 ;						UTILITIES
 MOVEVALUE:	
@@ -958,5 +1056,285 @@ case9d
     ;movlw 0x0
     bcf PORTA, 5
     goto	endshow
+;----------------------------------------------------------------------------------
+					;COMUNICACION
+ENVIARDEC ; Decide que enviar encicladamente
+	CALL	DELAY_D
+	MOVLW	B'00000001'
+	SUBWF	CONE, 0
+	BTFSC	STATUS, Z
+	CALL	ENVIARGM ; enviar grupo mayor
+	CALL	DELAY_D
+	MOVLW	B'00000010'
+	SUBWF	CONE, 0
+	BTFSC	STATUS, Z
+	CALL	ENVIARVM ; enviar valor mayor
+	CALL	DELAY_D
+	MOVLW	B'00000011'
+	SUBWF	CONE, 0
+	BTFSC	STATUS, Z
+	CALL	ENVIARGMM ; enviar grupo menor
+	CALL	DELAY_D
+	MOVLW	B'00000100'
+	SUBWF	CONE, 0
+	BTFSC	STATUS, Z
+	CALL	ENVIARVMM ; enviar valor menor
+	CALL	DELAY_D
+	MOVLW	B'00000101'
+	SUBWF	CONE, 0
+	BTFSC	STATUS, Z
+	CALL	FINENV; hacer comparacion	
+	INCF	CONE, 1	
+	RETURN
 
+SETBITS
+	BTFSC	DATO, 0
+	GOTO	SET11
+	GOTO	SET10
+SETBITS1
+	BTFSC	DATO, 1
+	GOTO	SET21
+	GOTO	SET20
+SETBITS2
+	BTFSC	DATO, 2
+	GOTO	SET31
+	GOTO	SET30
+SETBITS3
+	BTFSC	DATO, 3
+	GOTO	SET41
+	GOTO	SET40
+ENDSET
+	RETURN	
+
+SET11
+	;BSF	PORTB, 1
+	BSF	PORTC, 4 ;***************************
+	GOTO	SETBITS1
+SET10
+	;BCF	PORTB, 1
+	BSF	PORTC, 4 ;***************************
+	GOTO	SETBITS1
+	
+SET21
+	;BSF	PORTB, 2
+	BSF	PORTC, 5 ;***************************
+	GOTO	SETBITS2
+SET20
+	;BCF	PORTB, 2
+	BSF	PORTC, 5 ;***************************
+	GOTO	SETBITS2
+	
+SET31
+	;BSF	PORTB, 3
+	BSF	PORTC, 6 ;***************************
+	GOTO	SETBITS3
+SET30
+	;BCF	PORTB, 3
+	BSF	PORTC, 6 ;***************************
+	GOTO	SETBITS3
+	
+SET41
+	;BSF	PORTB, 4
+	BSF	PORTC, 7 ;***************************
+	GOTO	ENDSET
+SET40
+	;BCF	PORTB, 4
+	BSF	PORTC, 7 ;***************************
+	GOTO	ENDSET
+	
+ENVIARGM
+	MOVF	MAYG, W
+	MOVWF 	DATO
+	CALL	SETBITS
+	;BTFSC	PORTB, 0
+	BTFSC	PORTD, 6 ;***********************
+	GOTO	ENVIARGM 
+	RETURN
+	
+ENVIARVM
+	MOVF	MAYV, W
+	MOVWF 	DATO
+	CALL	SETBITS	
+	;BTFSC	PORTB, 0
+	BTFSC	PORTD, 6 ;***********************
+	GOTO	ENVIARVM 
+	RETURN
+	
+ENVIARGMM
+	MOVF	MENG, W
+	MOVWF 	DATO
+	CALL	SETBITS	
+	;BTFSC	PORTB, 0
+	BTFSC	PORTD, 6 ;***********************
+	GOTO	ENVIARGMM 
+	RETURN
+	
+ENVIARVMM
+	MOVF	MENV, W
+	MOVWF 	DATO
+	CALL	SETBITS	
+	;BTFSC	PORTB, 0
+	BTFSC	PORTD, 6 ;***********************
+	GOTO	ENVIARVMM 
+	RETURN
+
+RECIBIRDEC ; recibe encicladamente
+	CALL	DELAY_D
+	MOVLW	B'00000001'
+	SUBWF	CONR, 0
+	BTFSC	STATUS, Z
+	CALL	RECIBIRGM ; enviar grupo mayor
+	CALL	DELAY_D
+	MOVLW	B'00000010'
+	SUBWF	CONR, 0
+	BTFSC	STATUS, Z
+	CALL	RECIBIRVM ; enviar valor mayor
+	CALL	DELAY_D
+	MOVLW	B'00000011'
+	SUBWF	CONR, 0
+	BTFSC	STATUS, Z
+	CALL	RECIBIRGMM ; enviar grupo menor
+	CALL	DELAY_D
+	MOVLW	B'00000100'
+	SUBWF	CONR, 0
+	BTFSC	STATUS, Z
+	CALL	RECIBIRVMM ; enviar valor menor	
+	CALL	DELAY_D
+	MOVLW	B'00000101'
+	SUBWF	CONR, 0
+	BTFSC	STATUS, Z
+	CALL	FINREC; hacer comparacion	
+	INCF	CONR, 1			
+	RETURN
+	
+FINREC
+	MOVLW	B'00000000'
+	MOVWF   CONR
+	CALL	COMPAREMAYORG
+	CALL	COMPAREMENORG
+	BTFSC	PORTD, 0
+	GOTO	FINREC 
+	RETURN
+	
+FINENV
+	MOVLW	B'00000000'
+	MOVWF   CONE
+	;BTFSC	PORTB, 0
+	BTFSC	PORTD, 6 ;****************************
+	GOTO	FINENV
+	RETURN
+	
+SET11R
+	BSF	DATO, 0
+	GOTO	SETBITS1R
+SET10R
+	BCF	DATO, 0
+	GOTO	SETBITS1R
+	
+SET21R
+	BSF	DATO, 1
+	GOTO	SETBITS2R
+SET20R
+	BCF	DATO, 1
+	GOTO	SETBITS2R
+	
+SET31R
+	BSF	DATO, 2
+	GOTO	SETBITS3R
+SET30R
+	BCF	DATO, 2
+	GOTO	SETBITS3R
+	
+SET41R
+	BSF	DATO, 3
+	GOTO	ENDSETR
+SET40R
+	BCF	DATO, 3
+	GOTO	ENDSETR
+
+SETBITSR
+	BTFSC	PORTC, 3
+	GOTO	SET11R
+	GOTO	SET10R
+SETBITS1R
+	BTFSC	PORTC, 2
+	GOTO	SET21R
+	GOTO	SET20R
+SETBITS2R
+	BTFSC	PORTC, 1
+	GOTO	SET31R
+	GOTO	SET30R
+SETBITS3R
+	BTFSC	PORTC, 0
+	GOTO	SET41R
+	GOTO	SET40R
+ENDSETR
+	RETURN	
+
+	
+RECIBIRGM
+	CALL	SETBITSR
+	MOVF	DATO, W
+	MOVWF	MAYBG
+	BTFSC	PORTD, 0
+	GOTO	RECIBIRGM 
+	RETURN	
+	
+RECIBIRVM
+	CALL	SETBITSR
+	MOVF	DATO, W
+	MOVWF	MAYBV
+	BTFSC	PORTD, 0
+	GOTO	RECIBIRVM 
+	RETURN
+
+RECIBIRGMM
+	CALL	SETBITSR
+	MOVF	DATO, W
+	MOVWF	MENBG
+	BTFSC	PORTD, 0
+	GOTO	RECIBIRGMM 
+	RETURN	
+
+RECIBIRVMM
+	CALL	SETBITSR
+	MOVF	DATO, W
+	MOVWF	MENBV
+	BTFSC	PORTD, 0
+	GOTO	RECIBIRVMM 
+	RETURN
+
+COMPAREMAYORG 
+	MOVF  MAYV, W
+	SUBWF MAYBV, W
+	BTFSS STATUS, C       
+	GOTO  NOCHANGEMAY
+	GOTO  CHANGEMAY	                        
+
+CHANGEMAY
+	MOVF  MAYBG, W 
+        MOVWF MAYG
+        MOVF  MAYBV, W
+        MOVWF MAYV
+	RETURN
+
+NOCHANGEMAY
+	RETURN
+	
+COMPAREMENORG 
+	MOVF  MENV, W
+	SUBWF MENBV, W
+	BTFSS STATUS, C  
+	GOTO  CHANGEMEN     
+	GOTO  NOCHANGEMEN	                        
+
+CHANGEMEN
+	MOVF  MENBG, W 
+        MOVWF MENG
+        MOVF  MENBV, W
+        MOVWF MENV
+	RETURN
+
+NOCHANGEMEN
+	RETURN
 END
