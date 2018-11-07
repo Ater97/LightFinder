@@ -25,14 +25,14 @@ _inicio
 	;            7    6     5 4 3     2     1     0 
 	; 9Fh ADCON1 ADFM ADCS2 ? ? PCFG3 PCFG2 PCFG1 PCFG0
 	bsf TRISA,0 ;RA0 linea de entrada para el ADC
-    	;Port A: display output
-    	bcf	TRISA, 1
+    ;Port A: display output
+    bcf	TRISA, 1
    	bcf	TRISA, 2
-    	bcf	TRISA, 3
+    bcf	TRISA, 3
    	bcf	TRISA, 4
-    	bcf	TRISA, 5
-    	bcf	TRISE, 0
-    	bcf	TRISE, 1
+    bcf	TRISA, 5
+    bcf	TRISE, 0
+    bcf	TRISE, 1
 	clrf TRISB
 	bcf STATUS,RP0 ;Ir banco 0
 	bcf STATUS,RP1
@@ -54,10 +54,10 @@ _espera
 	movfw ADC ;W = ADC
     	goto  V1
 returnExec
-	goto CHICKI
+	goto wait
 
-CHICKI
-	goto CHICKI	
+wait
+	goto wait	
 
 V1
     movlw D'210'
