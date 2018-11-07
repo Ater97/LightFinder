@@ -1,28 +1,19 @@
-;configuracion 
-;status 
-	DATO 	EQU 0X21
-    varA    EQU 0x41
-    varB    EQU 0x42
-    varC    EQU 0x43
-    VARDISPLAY    EQU 0x44
-    cont    EQU 0x45 
-    ADC     EQU 0x46
-    CON     EQU 0X47
-    CON2    EQU 0X48
-    CON3    EQU 0X49
-	GROUPNUMBER	EQU 0x50
+ADC EQU 0x20
+CounterC EQU 0X21
+CounterB EQU 0X22
+CounterA EQU 0X23
+waffles EQU 0x24
 
+	org 0x00 ;Inicio del programa en la posici?n cero de memoria
+	nop ;Libre (uso del debugger)
 
-INICIO
-	ORG 0x00 ;se elige en que posicion de memoria empezaremos 
-	GOTO START
-START
+_inicio
 	bcf STATUS,RP0 ;Ir banco 0
 	bcf STATUS,RP1
 	movlw b'01000001' ;A/D conversion Fosc/8
 	movwf ADCON0
 	;     	     7     6     5    4    3    2       1 0
-	; 1Fh ADCON0 ADCS1 ADCS0 CHS2 CHS1 CHS0 GO/DONE � ADON
+	; 1Fh ADCON0 ADCS1 ADCS0 CHS2 CHS1 CHS0 GO/DONE ? ADON
 	bsf STATUS,RP0 ;Ir banco 1
 	bcf STATUS,RP1
 	movlw b'00000111'
@@ -32,162 +23,253 @@ START
 	movlw b'00001110' ;A/D Port AN0/RA0
 	movwf ADCON1
 	;            7    6     5 4 3     2     1     0 
-	; 9Fh ADCON1 ADFM ADCS2 � � PCFG3 PCFG2 PCFG1 PCFG0
+	; 9Fh ADCON1 ADFM ADCS2 ? ? PCFG3 PCFG2 PCFG1 PCFG0
 	bsf TRISA,0 ;RA0 linea de entrada para el ADC
+    	;Port A: display output
+    	bcf	TRISA, 1
+   	bcf	TRISA, 2
+    	bcf	TRISA, 3
+   	bcf	TRISA, 4
+    	bcf	TRISA, 5
+    	bcf	TRISE, 0
+    	bcf	TRISE, 1
 	clrf TRISB
 	bcf STATUS,RP0 ;Ir banco 0
 	bcf STATUS,RP1
-	clrf PORTB ;Limpiar PORTB
-    ;----------------------------------------------------------------------------
-    BSF	STATUS,	5	; BIT SET FILE coloca el registro 5 del banco status en 1
-	CLRF	TRISB
-	MOVLW	B'00000001'	
-	MOVWF	TRISC
-	BCF	STATUS,	5	;Limpiamos el B CON BCF. TRIS ES PARA DIRECCIONES
-	MOVLW	0X00
-	MOVWF	PORTB	; L a W, y de W a F 
-	BCF	STATUS,	RP0	
-	MOVLW	0X01
-	MOVWF	PORTB	; L a W, y de W a F
+_bucle
+	;btfss INTCON,T0IF
+	;goto _bucle ;Esperar que el timer0 desborde
+	; SE DEBE DE COLOCAR UN DELAY PARA QUE ESPERE LA CONVERSION
+	BSF  STATUS,Z
+	CALL _PRESPERA
+	bcf INTCON,T0IF ;Limpiar el indicador de desborde
+	bsf ADCON0,GO ;Comenzar conversion A/D
+_espera
+	btfsc ADCON0,GO ;ADCON0 es 0? (la conversion esta completa?)
+	goto _espera ;No, ir _espera
+	movf ADRESH,W ;Si, W=ADRESH
+	; 1Eh ADRESH A/D Result Register High Byte
+	; 9Eh ADRESL A/D Result Register Low Byte 
+	movwf ADC ;ADC=W
+	movfw ADC ;W = ADC
+    	goto  V1
+returnExec
+	goto CHICKI
+
+CHICKI
+	goto CHICKI	
+
+V1
+    movlw D'210'
+    subwf ADC, W
+    btfss STATUS, C
+    goto V2
+    movlw 0x0
+    movwf waffles
+    call case0
+    goto returnExec
+
+V2
+    movlw D'194'
+    subwf ADC, W
+    btfss STATUS, C
+    goto V3
+    movlw 0x1
+    movwf waffles
+    call case1
+    goto returnExec
+
+V3
+    movlw D'174'
+    subwf ADC, W
+    btfss STATUS, C
+    goto V4
+    movlw 0x2
+    movwf waffles
+    call case2
+    goto returnExec
+
+V4
+    movlw D'158'
+    subwf ADC, W
+    btfss STATUS, C
+    goto V5
+    movlw 0x3
+    movwf waffles
+    call case3
+    goto returnExec
+
+V5
+    movlw D'138'
+    subwf ADC, W
+    btfss STATUS, C
+    goto V6
+    movlw 0x4
+    movwf waffles
+    call case4
+    goto returnExec
+
+V6
+    movlw D'117'
+    subwf ADC, W
+    btfss STATUS, C
+    goto V7
+    movlw 0x5
+    movwf waffles
+    call case5
+    goto returnExec
+
+V7
+    movlw D'82'
+    subwf ADC, W
+    btfss STATUS, C
+    goto V8
+    movlw 0x6
+    movwf waffles
+    call case6
+    goto returnExec
+
+V8
+    movlw D'51'
+    subwf ADC, W
+    btfss STATUS, C
+    goto V9
+    movlw 0x7
+    movwf waffles
+    call case7
+    goto returnExec
+
+V9
+    movlw D'28'
+    subwf ADC, W
+    btfss STATUS, C
+    goto V10
+    movlw 0x8
+    movwf waffles
+    call case8
+    goto returnExec
+
+V10
+    ; movlw D'0'
+    ; subwf ADC, W
+    ; btfss STATUS, N
+    ; goto V10<--
+    ;btfsc STATUS, C
+    movlw 0x9
+    movwf waffles
+    call case9
+    goto returnExec
+
+_PRESPERA
+	MOVLW 0XFF
+	MOVWF CounterA
+	MOVWF COUNTERb
+	MOVWF COUNTERc	
+	CALL ESPE
+	RETURN	
 	
-	MOVLW	B'00000100'
-	MOVWF	varA
-	MOVLW	B'00001000'
-	MOVWF	varB
-	MOVLW	B'00000101'
-	MOVWF	varC
-	MOVLW	B'00000000'
-	MOVWF	VARDISPLAY
-	MOVLW	B'00000000'
-	MOVWF	cont
-;------------------------------------------------------------------------------
-;------------------------------------------------------------------------------
-MENU 
-	;MAYBE ADD A DELAY HERE :)
-	BTFSC	PORTC,0	;PRESS THE BUTTON
-	call	INC
-	GOTO	SwitchCont
-INC:
-	INCF	cont,1
-	BTFSC	cont,2
-	call	ResetCont
+ESPE
+	DECFSZ	CounterA,0X01
+	GOTO	ESPE
+	CALL	ESPE2
 	RETURN
-ResetCont:
-	MOVLW	B'00000000'
-	MOVWF	cont
+ESPE2
+	DECFSZ	COUNTERb,0X01
+	GOTO	ESPE2
+	CALL	ESPE3
 	RETURN
-SwitchCont:
-	BTFSC	cont,0
-	GOTO	CI	
-	GOTO	CP	
-CP:
-	BTFSC	cont,1
-	GOTO	CASE3	;10
-	GOTO	CASE1	;00
-CI:
-	BTFSC	cont,1
-	GOTO	CASE4	;11
-	GOTO	CASE2	;01
-CASE1:
-	MOVFW	varA
-	MOVWF	VARDISPLAY
-	GOTO	DECODIFICADOR
-CASE2:
-	MOVFW	varB
-	MOVWF	VARDISPLAY
-	GOTO	DECODIFICADOR
-CASE3:
-	MOVFW	varC
-	MOVWF	VARDISPLAY
-	GOTO	DECODIFICADOR
-CASE4:
-	MOVLW	GROUPNUMBER
-	MOVWF	VARDISPLAY
-	GOTO	DECODIFICADOR
-;---------------------------------------------------------------------
-					;DISPLAY ON PORT B WHATS IN VARDISPLAY
-DECODIFICADOR:
-    BTFSC   VARDISPLAY, 7
-    GOTO    OCHOYNUEVE
-	BTFSC	VARDISPLAY, 6
-	GOTO	CUATROASIETE
-	GOTO	CEROATRES
+ESPE3
+	DECFSZ	COUNTERc,0X01
+	GOTO	ESPE3
+	RETURN	
 
-MV:	
-	MOVF	DATO, W  
-	MOVWF	PORTB	
-	RETURN
-
-CEROATRES:
-	BTFSC	VARDISPLAY, 5
-	GOTO	DOSYTRES
-	GOTO	CEROYUNO
-	GOTO	MENU
-CEROYUNO:
-	BTFSC	VARDISPLAY, 4
-	GOTO	UNO
-	MOVLW	B'01011111' ;ZERO
-	MOVWF	DATO
-	call	MV
-	GOTO	MENU
-UNO:
-	MOVLW	B'00000110'
-	MOVWF	DATO
-	call	MV
-	GOTO	MENU
-DOSYTRES:
-	BTFSC	VARDISPLAY, 4
-	GOTO	TRES
-	MOVLW	B'00111011';TWO
-	MOVWF	DATO
-	call	MV
-	GOTO	MENU
-TRES:	
-	MOVLW	B'00101111'
-	MOVWF	DATO
-	call	MV
-	GOTO	MENU
-
-CUATROASIETE:	
-	BTFSC	VARDISPLAY, 5
-	GOTO	SEISYSIETE
-	GOTO	CINCOYCUATRO
-	GOTO	MENU
-CINCOYCUATRO:
-	BTFSC	VARDISPLAY, 4
-	GOTO	CINCO
-        MOVLW	B'01100110';SEIS
-	MOVWF	DATO
-	call	MV
-	GOTO	MENU
-CINCO:
-        MOVLW	B'01101101'
-	MOVWF	DATO
-	call	MV
-	GOTO	MENU
-	
-SEISYSIETE:	
-	BTFSC	VARDISPLAY, 4
-	GOTO	SIETE
-        MOVLW	B'01111101';SEIS
-	MOVWF	DATO
-	call	MV
-	GOTO	MENU
-SIETE:
-        MOVLW	B'00000111'
-	MOVWF	DATO
-	call	MV
-	GOTO	MENU
-
-OCHOYNUEVE:
-        BTFSS   VARDISPLAY, 4
-        GOTO    OCHO
-        MOVLW	B'01101111';NUEVE
-	MOVWF	DATO
-	call	MV
-	GOTO	MENU
-OCHO:
-	MOVLW	B'01111111'
-	MOVWF	DATO
-	call	MV
-	GOTO	MENU
+case0
+    bcf PORTA, 1
+    bcf PORTA, 2
+    bcf PORTA, 3
+    bcf PORTA, 4
+    bcf PORTA, 5
+    bcf PORTE, 0
+    bsf PORTE, 1
+    return 
+case1
+    bsf PORTA, 1
+    bsf PORTA, 4
+    bsf PORTA, 5
+    bsf PORTE, 0
+    bsf PORTE, 1
+    bcf PORTA, 2
+    bcf PORTA, 3
+    return
+case2
+    bcf PORTA, 1
+    bcf PORTA, 2
+    bcf PORTA, 4
+    bcf PORTA, 5
+    bcf PORTE, 1
+    bsf PORTA, 3
+    bsf PORTE, 0
+    return
+case3
+    bcf PORTA, 1
+    bcf PORTA, 2
+    bcf PORTA, 3
+    bcf PORTA, 4
+    bcf PORTE, 1
+    bsf PORTE, 0
+    bsf PORTA, 5
+    return
+case4
+    bcf PORTA, 2
+    bcf PORTA, 3
+    bcf PORTE, 0
+    bcf PORTE, 1
+    bsf PORTA, 1
+    bsf PORTA, 4
+    bsf PORTA, 5
+    return
+case5
+    bcf PORTA, 3
+    bcf PORTA, 4
+    bcf PORTE, 0
+    bcf PORTE, 1
+    bcf PORTA, 1
+    bsf PORTA, 5
+    bsf PORTA, 2
+    return
+case6
+    bcf PORTA, 3
+    bcf PORTA, 4
+    bcf PORTA, 5
+    bcf PORTE, 0
+    bcf PORTE, 1
+    bcf PORTA, 1
+    bsf PORTA, 2
+    return
+case7
+    bcf PORTA, 1
+    bcf PORTA, 2
+    bcf PORTA, 3
+    bsf PORTA, 4
+    bsf PORTA, 5
+    bsf PORTE, 0
+    bsf PORTE, 1
+    return
+case8
+    bcf PORTA, 1
+    bcf PORTA, 2
+    bcf PORTA, 3
+    bcf PORTA, 4
+    bcf PORTA, 5
+    bcf PORTE, 0
+    bcf PORTE, 1
+    return
+case9
+    bcf PORTA, 1
+    bcf PORTA, 2
+    bcf PORTA, 3
+    bcf PORTA, 4
+    bcf PORTE, 0
+    bcf PORTE, 1
+    bsf PORTA, 5
+    return
