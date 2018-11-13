@@ -1,0 +1,271 @@
+---------------------------------------------
+PIC ASSEMBLER LISTING
+Line    Address Opcode  Instruction
+---------------------------------------------
+0001    0000            DATO 	EQU 0x21
+0002    0000            NUM1	EQU 0x22
+0003    0000            NUM2	EQU 0x23
+0004    0000            CONT	EQU 0x24
+0005    0000            BACK	EQU 0x25
+0006    0000            VARDISPLAY EQU 0x26
+0007    0000            
+0008    0000            HEAD
+0009    0000            	ORG 0x00
+0010    0000    2801    	GOTO START
+0011    0001            	
+0012    0001            START	
+0013    0001    1683    	BSF 	STATUS, 5	;banco 0
+0014    0002    0186    	CLRF	TRISB		;salida
+0015    0003    0187    	CLRF	TRISC		;salida
+0016    0004    0188    	CLRF	TRISD		;salida
+0017    0005    30FF    	MOVLW	B'11111111'
+0018    0006    0087    	MOVWF	TRISC 		;entrada
+0019    0007    0086    	MOVWF	TRISB		;entrada
+0020    0008    1085    	bcf	TRISA, 1
+0021    0009    1105    	bcf	TRISA, 2
+0022    000A    1185    	bcf	TRISA, 3
+0023    000B    1205    	bcf	TRISA, 4
+0024    000C    1285    	bcf	TRISA, 5
+0025    000D    1009    	bcf	TRISE, 0
+0026    000E    1089    	bcf	TRISE, 1
+0027    000F    1283    	BCF 	STATUS, RP0 
+0028    0010            
+0029    0010            MENU:	
+0030    0010    1806    	BTFSC	PORTB, 0
+0031    0011    2020    	call	PUTNUM1
+0032    0012    1886    	BTFSC	PORTB, 1
+0033    0013    2023    	call	PUTNUM2
+0034    0014    1906    	BTFSC	PORTB, 2
+0035    0015    2026    	call	SUMA
+0036    0016    1986    	BTFSC	PORTB, 3
+0037    0017    202A    	call	RESTA
+0038    0018    1A06    	BTFSC	PORTB, 4
+0039    0019    202E    	call	MULT
+0040    001A    1A86    	BTFSC	PORTB, 5
+0041    001B    2039    	call	DIV
+0042    001C    0808    	MOVFW	PORTD
+0043    001D    00A6    	MOVWF	VARDISPLAY
+0044    001E    2046    	call	SHOWVARDISPLAY
+0045    001F    2810    	GOTO 	MENU
+0046    0020            	
+0047    0020            PUTNUM1:
+0048    0020    0807    	MOVF	PORTC, W
+0049    0021    00A2    	MOVWF	NUM1
+0050    0022    0008    	RETURN
+0051    0023            	
+0052    0023            PUTNUM2:
+0053    0023    0807    	MOVF	PORTC, W
+0054    0024    00A3    	MOVWF	NUM2
+0055    0025    0008    	RETURN
+0056    0026            	
+0057    0026            SUMA:
+0058    0026    0822    	MOVF	NUM1, W
+0059    0027    0723    	ADDWF	NUM2, 0
+0060    0028    0088    	MOVWF	PORTD
+0061    0029    0008    	RETURN
+0062    002A            	
+0063    002A            RESTA:
+0064    002A    0823    	MOVF	NUM2, W
+0065    002B    0222    	SUBWF	NUM1, 0
+0066    002C    0088    	MOVWF	PORTD
+0067    002D    0008    	RETURN
+0068    002E            	
+0069    002E            MULT:
+0070    002E    3000    	MOVLW	B'00000000'
+0071    002F    00A5    	MOVWF	BACK
+0072    0030    0822    	MOVF	NUM1, W
+0073    0031    00A4    	MOVWF	CONT
+0074    0032            MULT2:
+0075    0032    0823    	MOVF	NUM2, W
+0076    0033    07A5    	ADDWF	BACK, 1
+0077    0034    0BA4    	DECFSZ	CONT, 1 ;decrement f, skip if 0
+0078    0035    2832    	GOTO	MULT2	
+0079    0036    0825    	MOVF	BACK, W
+0080    0037    0088    	MOVWF	PORTD
+0081    0038    0008    	RETURN
+0082    0039            									
+0083    0039            DIV:
+0084    0039    3000    	MOVLW	B'00000000'
+0085    003A    00A5    	MOVWF	BACK
+0086    003B    0822    	MOVF	NUM1, W
+0087    003C    00A4    	MOVWF	CONT
+0088    003D            DIV2:	
+0089    003D    0823    	MOVF	NUM2, W
+0090    003E    02A4    	SUBWF	CONT, 1
+0091    003F    1803    	BTFSC	STATUS, C 
+0092    0040    2844    	GOTO	INCDIV
+0093    0041    0825    	MOVF	BACK, W
+0094    0042    0088    	MOVWF	PORTD
+0095    0043    0008    	RETURN
+0096    0044            	
+0097    0044            INCDIV:
+0098    0044    0AA5    	INCF	BACK, 1
+0099    0045    283D    	GOTO	DIV2
+0100    0046            	;result		carry zero (status)
+0101    0046            	;positive     1		0
+0102    0046            	;zero		  1		1
+0103    0046            	;negative     0     0
+0104    0046            
+0105    0046            
+0106    0046            SHOWVARDISPLAY: ;show varphotocell on display
+0107    0046    3000     	movlw 0x00
+0108    0047    0226        subwf VARDISPLAY, W
+0109    0048    1903        BTFSC STATUS, z
+0110    0049    286F        goto  case0d
+0111    004A            
+0112    004A    3001     	movlw 0x01
+0113    004B    0226        subwf VARDISPLAY, W
+0114    004C    1903        BTFSC STATUS, z
+0115    004D    2877        goto  case1d
+0116    004E            
+0117    004E    3002    	movlw 0x02
+0118    004F    0226        subwf VARDISPLAY, W
+0119    0050    1903        BTFSC STATUS, z
+0120    0051    287F        goto  case2d
+0121    0052            
+0122    0052    3003     	movlw 0x03
+0123    0053    0226        subwf VARDISPLAY, W
+0124    0054    1903        BTFSC STATUS, z
+0125    0055    2887        goto  case3d
+0126    0056            
+0127    0056    3004     	movlw 0x04
+0128    0057    0226        subwf VARDISPLAY, W
+0129    0058    1903        BTFSC STATUS, z
+0130    0059    288F        goto  case4d
+0131    005A            
+0132    005A    3005    	movlw 0x05
+0133    005B    0226        subwf VARDISPLAY, W
+0134    005C    1903        BTFSC STATUS, z
+0135    005D    2897        goto  case5d
+0136    005E            
+0137    005E    3006     	movlw 0x06
+0138    005F    0226        subwf VARDISPLAY, W
+0139    0060    1903        BTFSC STATUS, z
+0140    0061    289F        goto  case6d
+0141    0062            
+0142    0062    3007     	movlw 0x07
+0143    0063    0226        subwf VARDISPLAY, W
+0144    0064    1903        BTFSC STATUS, z
+0145    0065    28A7        goto  case7d
+0146    0066            
+0147    0066    3008     	movlw 0x08
+0148    0067    0226        subwf VARDISPLAY, W
+0149    0068    1903        BTFSC STATUS, z
+0150    0069    28AF        goto  case8d
+0151    006A            
+0152    006A    3009     	movlw 0x09
+0153    006B    0226        subwf VARDISPLAY, W
+0154    006C    1903        BTFSC STATUS, z
+0155    006D    28B7        goto  case9d	
+0156    006E            endshow:
+0157    006E    0008    	RETURN
+0158    006F            
+0159    006F            case0d
+0160    006F    1485        bsf PORTA, 1
+0161    0070    1505        bsf PORTA, 2
+0162    0071    1585        bsf PORTA, 3
+0163    0072    1605        bsf PORTA, 4
+0164    0073    1685        bsf PORTA, 5
+0165    0074    1409        bsf PORTE, 0
+0166    0075    1089        bcf PORTE, 1
+0167    0076    286E        goto	endshow
+0168    0077            case1d
+0169    0077                ;movlw 0x0
+0170    0077    1085        bcf PORTA, 1
+0171    0078    1205        bcf PORTA, 4
+0172    0079    1285        bcf PORTA, 5
+0173    007A    1009        bcf PORTE, 0
+0174    007B    1089        bcf PORTE, 1
+0175    007C                ;movlw 0x1
+0176    007C    1505        bsf PORTA, 2
+0177    007D    1585        bsf PORTA, 3
+0178    007E    286E        goto	endshow
+0179    007F            case2d
+0180    007F                ;movlw 0x1
+0181    007F    1485        bsf PORTA, 1
+0182    0080    1505        bsf PORTA, 2
+0183    0081    1605        bsf PORTA, 4
+0184    0082    1685        bsf PORTA, 5
+0185    0083    1489        bsf PORTE, 1
+0186    0084                ;movlw 0x0
+0187    0084    1185        bcf PORTA, 3
+0188    0085    1009        bcf PORTE, 0
+0189    0086    286E        goto	endshow
+0190    0087            case3d
+0191    0087                ;movlw 0x1
+0192    0087    1485        bsf PORTA, 1
+0193    0088    1505        bsf PORTA, 2
+0194    0089    1585        bsf PORTA, 3
+0195    008A    1605        bsf PORTA, 4
+0196    008B    1489        bsf PORTE, 1
+0197    008C                ;movlw 0x0
+0198    008C    1009        bcf PORTE, 0
+0199    008D    1285        bcf PORTA, 5
+0200    008E    286E        goto	endshow
+0201    008F            case4d
+0202    008F                ;movlw 0x1
+0203    008F    1505        bsf PORTA, 2
+0204    0090    1585        bsf PORTA, 3
+0205    0091    1409        bsf PORTE, 0
+0206    0092    1489        bsf PORTE, 1
+0207    0093                ;movlw 0x0
+0208    0093    1085        bcf PORTA, 1
+0209    0094    1205        bcf PORTA, 4
+0210    0095    1285        bcf PORTA, 5
+0211    0096    286E        goto	endshow
+0212    0097            case5d
+0213    0097                ;movlw 0x1
+0214    0097    1585        bsf PORTA, 3
+0215    0098    1605        bsf PORTA, 4
+0216    0099    1409        bsf PORTE, 0
+0217    009A    1489        bsf PORTE, 1
+0218    009B    1485        bsf PORTA, 1
+0219    009C                ;movlw 0x0
+0220    009C    1285        bcf PORTA, 5
+0221    009D    1105        bcf PORTA, 2
+0222    009E    286E        goto	endshow
+0223    009F            case6d
+0224    009F                ;movlw 0x1
+0225    009F    1585        bsf PORTA, 3
+0226    00A0    1605        bsf PORTA, 4
+0227    00A1    1685        bsf PORTA, 5
+0228    00A2    1409        bsf PORTE, 0
+0229    00A3    1489        bsf PORTE, 1
+0230    00A4    1485        bsf PORTA, 1
+0231    00A5                ;movlw 0x0
+0232    00A5    1105        bcf PORTA, 2
+0233    00A6    286E        goto	endshow
+0234    00A7            case7d
+0235    00A7                ;movlw 0x1
+0236    00A7    1485        bsf PORTA, 1
+0237    00A8    1505        bsf PORTA, 2
+0238    00A9    1585        bsf PORTA, 3
+0239    00AA                ;movlw 0x0
+0240    00AA    1205        bcf PORTA, 4
+0241    00AB    1285        bcf PORTA, 5
+0242    00AC    1009        bcf PORTE, 0
+0243    00AD    1089        bcf PORTE, 1
+0244    00AE    286E        goto	endshow
+0245    00AF            case8d
+0246    00AF                ;movlw 0x1
+0247    00AF    1485        bsf PORTA, 1
+0248    00B0    1505        bsf PORTA, 2
+0249    00B1    1585        bsf PORTA, 3
+0250    00B2    1605        bsf PORTA, 4
+0251    00B3    1685        bsf PORTA, 5
+0252    00B4    1409        bsf PORTE, 0
+0253    00B5    1489        bsf PORTE, 1
+0254    00B6    286E        goto	endshow
+0255    00B7            case9d
+0256    00B7                ;movlw 0x1
+0257    00B7    1485        bsf PORTA, 1
+0258    00B8    1505        bsf PORTA, 2
+0259    00B9    1585        bsf PORTA, 3
+0260    00BA    1605        bsf PORTA, 4
+0261    00BB    1409        bsf PORTE, 0
+0262    00BC    1489        bsf PORTE, 1
+0263    00BD                ;movlw 0x0
+0264    00BD    1285        bcf PORTA, 5
+0265    00BE    286E        goto	endshow
+---------------------------------------------
+Number of errors = 0
