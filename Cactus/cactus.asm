@@ -1,4 +1,4 @@
-TEMP	EQU	0x20
+zTEMP	EQU	0x20
 DATO  	EQU 0x21
 COUNTY 	EQU 0x22
 COUNTX 	EQU 0x23
@@ -104,10 +104,15 @@ START
 	BCF	TRISC, 6 ;************************
 	BCF	TRISC, 7 ;************************
 
-	BSF	TRISC, 0 ; BIT 0 recibir
-	BSF	TRISC, 1 ; BIT 1 recibir
-	BSF	TRISC, 2 ; BIT 2 recibir
-	BSF	TRISC, 3 ; BIT 3 recibir
+	;BSF	TRISC, 0 ; BIT 0 recibir
+	;BSF	TRISC, 1 ; BIT 1 recibir
+	;BSF	TRISC, 2 ; BIT 2 recibir
+	;BSF	TRISC, 3 ; BIT 3 recibir
+	bcf PORTC, 0
+	bcf PORTC, 1
+	bcf PORTC, 2
+	bcf PORTC, 3
+	
 	BSF	TRISD, 0 ; identifica que tiene que recibir datos
 	MOVLW   B'00000001'
 	MOVWF	CONE
@@ -156,15 +161,29 @@ START
 ;--------------------------------------------------------------------
 								;MAIN
 WAITStart:
-
     BTFSC	PORTD,1
     GOTO    MAIN
 	BTFSC	PORTE,2
-	GOTO	SHOWTHINGS
-	CALL 	COMUNICACION
-
+	goto	SEND
+	;GOTO	SHOWTHINGS
+	;CALL 	COMUNICACION
 	GOTO    WAITStart
 						
+SEND:
+	MOVFW	VARPHOTOCELL
+	MOVWF	VARDISPLAY
+	call	SHOWVARDISPLAY
+	BTFSS 	PORTD, 6
+	GOTO 	SEND
+	
+SEND2:	
+	MOVFW	GROUPNUMBER
+	MOVWF	VARDISPLAY
+	CALL	SHOWVARDISPLAY
+	BTFSS	PORTE,2
+	GOTO 	SEND2
+	GOTO	SEND
+
 MAIN:
     call    SEARCH      ;SEARCH BEST POINT
     call    MOVEGREATER ;GO TO BEST POINT
@@ -1021,86 +1040,111 @@ case0d
     bsf PORTA, 5
     bsf PORTE, 0
     bcf PORTE, 1
+
+	bcf PORTC, 0
+	bcf PORTC, 1
+	bcf PORTC, 2
+	bcf PORTC, 3
     goto	endshow
 case1d
-    ;movlw 0x0
     bcf PORTA, 1
     bcf PORTA, 4
     bcf PORTA, 5
     bcf PORTE, 0
     bcf PORTE, 1
-    ;movlw 0x1
     bsf PORTA, 2
     bsf PORTA, 3
+
+	bsf PORTC, 0
+	bcf PORTC, 1
+	bcf PORTC, 2
+	bcf PORTC, 3
     goto	endshow
 case2d
-    ;movlw 0x1
     bsf PORTA, 1
     bsf PORTA, 2
     bsf PORTA, 4
     bsf PORTA, 5
     bsf PORTE, 1
-    ;movlw 0x0
     bcf PORTA, 3
     bcf PORTE, 0
+
+	bcf PORTC, 0
+	bsf PORTC, 1
+	bcf PORTC, 2
+	bcf PORTC, 3
     goto	endshow
 case3d
-    ;movlw 0x1
     bsf PORTA, 1
     bsf PORTA, 2
     bsf PORTA, 3
     bsf PORTA, 4
     bsf PORTE, 1
-    ;movlw 0x0
     bcf PORTE, 0
     bcf PORTA, 5
+
+	bsf PORTC, 0
+	bsf PORTC, 1
+	bcf PORTC, 2
+	bcf PORTC, 3
     goto	endshow
 case4d
-    ;movlw 0x1
     bsf PORTA, 2
     bsf PORTA, 3
     bsf PORTE, 0
     bsf PORTE, 1
-    ;movlw 0x0
     bcf PORTA, 1
     bcf PORTA, 4
     bcf PORTA, 5
+
+	bcf PORTC, 0
+	bcf PORTC, 1
+	bsf PORTC, 2
+	bcf PORTC, 3
     goto	endshow
 case5d
-    ;movlw 0x1
     bsf PORTA, 3
     bsf PORTA, 4
     bsf PORTE, 0
     bsf PORTE, 1
     bsf PORTA, 1
-    ;movlw 0x0
     bcf PORTA, 5
     bcf PORTA, 2
+
+	bsf PORTC, 0
+	bcf PORTC, 1
+	bsf PORTC, 2
+	bcf PORTC, 3
     goto	endshow
 case6d
-    ;movlw 0x1
     bsf PORTA, 3
     bsf PORTA, 4
     bsf PORTA, 5
     bsf PORTE, 0
     bsf PORTE, 1
     bsf PORTA, 1
-    ;movlw 0x0
     bcf PORTA, 2
+
+	bcf PORTC, 0
+	bsf PORTC, 1
+	bsf PORTC, 2
+	bcf PORTC, 3
     goto	endshow
 case7d
-    ;movlw 0x1
     bsf PORTA, 1
     bsf PORTA, 2
     bsf PORTA, 3
-    ;movlw 0x0
     bcf PORTA, 4
     bcf PORTA, 5
     bcf PORTE, 0
     bcf PORTE, 1
+
+	bsf PORTC, 0
+	bsf PORTC, 1
+	bsf PORTC, 2
+	bcf PORTC, 3
     goto	endshow
 case8d
-    ;movlw 0x1
     bsf PORTA, 1
     bsf PORTA, 2
     bsf PORTA, 3
@@ -1108,17 +1152,25 @@ case8d
     bsf PORTA, 5
     bsf PORTE, 0
     bsf PORTE, 1
+
+	bcf PORTC, 0
+	bcf PORTC, 1
+	bcf PORTC, 2
+	bsf PORTC, 3
     goto	endshow
 case9d
-    ;movlw 0x1
     bsf PORTA, 1
     bsf PORTA, 2
     bsf PORTA, 3
     bsf PORTA, 4
     bsf PORTE, 0
     bsf PORTE, 1
-    ;movlw 0x0
     bcf PORTA, 5
+
+	bsf PORTC, 0
+	bcf PORTC, 1
+	bcf PORTC, 2
+	bsf PORTC, 3
     goto	endshow
 ;----------------------------------------------------------------------------------
 					;COMUNICACION
